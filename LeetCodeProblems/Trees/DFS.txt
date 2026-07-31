@@ -1,0 +1,297 @@
+DFS -- depth first search-->branch by branch search--
+
+three traversal
+
+pre --->root,left,right
+inorder,---->left,root,right
+post----> left,right,root
+
+
+time and space complexity of these traversal
+
+big O of O(n)
+space copleixry as well O(n)
+
+
+path sum question(need to use dfs pre order traversal)
+
+def helper(ROOT,current_sum):
+	if not root:
+		return False
+		
+	current_sum = current_sum + root.val
+	
+	if not root.left and not root.right:
+		if current_sum == target_sum:
+			return True
+	
+	return helper(root.left,current_sum) or helper(root.right,current_sum)
+	
+res=helper(root,0)
+return res
+
+time complexity is order of (n)
+
+#path sum 2
+
+curr_path = []
+res=[]
+
+def helper(root,curr_path,curr_sum):
+	
+	
+	if not root:
+		return 
+		
+	curr-sum = curr-sum = root.val
+	curr-path.append(root.val)
+	
+	
+	if not root.left and root.right:
+		if curr_sum == targetSum:
+			res.append(curr_path.copy())
+			
+		#curr_path.pop()
+		#return
+		
+	helper(root.left,curr_path,curr_sum)
+	helper(root.right,curr_path,curr_sum)
+	
+	curr_path.pop()
+	return
+	
+helper(root,curr_path,0)
+return resN
+
+
+time and space complexity are
+N Log(n) for balanced tree
+
+space complexity
+
+curr path + call stack+res
+
+logN + logN+ NlogN
+
+---->NlogN
+
+skwed tree
+
+TC---> N
+SC---> N
+
+
+so finally will be NlogN
+
+
+######Diameter of Binary Tree
+
+diameter = LH + RH
+
+max_diameter=0
+
+def height(root)
+	non local max_dameter
+	if not root:
+		return 0
+		
+	LH=height(root.left,diameter)
+	RH=height(root.right)
+	diameter=LH+RH
+	
+	max_diameter = max(LH+RH,max_diameter)
+	return max(LH,RH)+1
+	
+height(root)
+return max_diameter
+
+
+TC(n)
+SC(n)
+
+
+#symmetric Tree
+	paindrome check we need to use it
+	
+approaches	
+	bfs,
+	inorder
+	two pointer approach
+	
+	
+#two pinter approach(preorder traversal)
+
+def helper9root1,root2)
+	
+	if not root1 and not root2:
+		return True
+	if not root1 or not root2:
+		return False
+		
+	if root1.val == root2.val and helper(root1.left,root2.right) and helper(root1.right,root2.left):
+		return True
+		
+	return False
+	
+	res = helper(root,root)
+	return res
+	
+	
+	
+	#Inorder
+	
+	
+	res=[]
+	
+	def helper(root):
+		 if not root:
+			return 
+			
+		helper(root.left)
+		res.append(root)
+		helper(root.right)
+		
+	helper(root)
+	
+	def is_palindrome(res):
+		l=0
+		r=len(res)-1
+		
+		while l<=r:
+		
+			if res[l] == res[r]
+				l=l+1
+				r=r-1
+				
+			else:
+				
+				return False
+		return True
+		
+	return is_palindrome(res)
+	
+	
+	
+	#convert sorted arrya to binary
+	BST
+	
+	left<root<right
+
+no.of nodes should be same at left side same as right side
+
+middle node will be are root node
+[-10,-3,0,5,3]  mid==root l=mid-1,  r= mid+1
+
+l=0
+r=len(nums)-1
+mid=l+r/2
+
+def helper(l,r)
+	if l>r:
+		return None
+		
+	mid = (l+r)//2
+	
+	root = TreeNode(nums[mid])
+	root.left = helper(l,mid-1)
+	root.right=helper(mid+1,r)
+	
+	return helper(l,r)
+	
+TC=N
+SC=N
+
+
+lowest common ancestor of a binary search tree
+
+
+def helper(root):
+	if not root:
+		return None
+
+	if p.val <root.val and q.val<root.val:
+		return helper(root.left)
+		
+	elif p.val>root.val and q.val>root.val:
+		return helper(root.right)
+		
+	else:
+		return root
+		
+return helper(root)
+
+#2nd approach 
+def lowestCA(root,p,q)
+	if not root:
+		None
+	
+	if root==p or root==q:
+		return root
+		
+	lca_left=self.lowestCA(root.left,p,q)
+	lca_right=self.lowestCA(root.right,p,q)
+	
+	if lca_left is not None and lca_right is not None:
+		return root
+		
+	if lca_left is not None:
+		return lca_left
+	
+	else:
+		return lca_right
+		
+
+#Construct Binary tree from inorder and Preorder
+
+we can use four pointer approach at here
+
+
+preorder array =[3,9,20,15,7]  in=[9,3,15,20,7]
+
+for fast search i will use hasmap
+
+def buildtree(preorder,inorder):
+	ps=0
+	pe=len(preorder)-1
+	is=0
+	ie=len(inorder)-1
+	
+	inorderMap={}
+	
+	for index,value in enumerate(inorder):
+		inorderMap{value]=index
+		
+	return self.buildTreeHelper(ps,pe,ie,preorder,inorder,inorderMap)
+	
+	
+def buildTreeHelper(ps,is,ie,preorder,inorder,inorderMap)
+
+	if ps>pe or is>ie:
+		return None
+		
+	mid = inorderMap[preorder[ps]]
+	leftCount=mid-is
+	
+	root = TreeNode(preorder[ps])
+	
+	root.left = self.buildTreeHelper(ps+1,ps+leftCount,is,mid-1,preorder,inorder,inorderMap)
+	
+	root.right=self.buildTreehelper(ps+leftCount+1,pe,mid+1,ie,preorder,inorder,inorderMap)
+	
+	return root
+
+	
+
+		
+
+
+
+		
+	
+	
+
+
+
+
+
+
