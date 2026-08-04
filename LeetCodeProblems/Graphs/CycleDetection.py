@@ -343,3 +343,264 @@ print(f"Cycle Detected (Directed): {result_directed}")
 #   - rec_stack tracks nodes in the current DFS path only
 #   - A visited node NOT in rec_stack means it was fully processed (no cycle through it)
 # ==============================================================================
+
+
+'''undirected grapgh dfs (parent approach)'''
+
+class Solution:
+
+    def isCycle(self, adj):
+
+        n = len(adj)
+
+        visited = [False] * n
+
+        def dfs(node, parent):
+
+            visited[node] = True
+
+            for neighbour in adj[node]:
+
+                if not visited[neighbour]:
+
+                    if dfs(neighbour, node):
+                        return True
+
+                elif neighbour != parent:
+
+                    return True
+
+            return False
+
+        # Handle disconnected graph
+        for i in range(n):
+
+            if not visited[i]:
+
+                if dfs(i, -1):
+                    return True
+
+        return False
+    
+'''Cycle detection in graph using bfs'''
+
+from collections import deque
+
+class Solution:
+
+    def isCycle(self, adj):
+
+        n = len(adj)
+
+        visited = [False] * n
+
+        def bfs(start):
+
+            queue = deque()
+
+            queue.append((start, -1))
+
+            visited[start] = True
+
+            while queue:
+
+                node, parent = queue.popleft()
+
+                for neighbour in adj[node]:
+
+                    if not visited[neighbour]:
+
+                        visited[neighbour] = True
+
+                        queue.append((neighbour, node))
+
+                    elif neighbour != parent:
+
+                        return True
+
+            return False
+
+        # Handle disconnected graph
+        for i in range(n):
+
+            if not visited[i]:
+
+                if bfs(i):
+                    return True
+
+        return False
+    
+    '''
+    
+    DFS vs BFS
+DFS	BFS
+Uses recursion	Uses queue
+Passes (node, parent) through recursion	Stores (node, parent) in queue
+dfs(neighbour, node)	queue.append((neighbour, node))
+Same cycle condition	Same cycle condition
+Time: O(V + E)	Time: O(V + E)
+Space: O(V)	Space: O(V)
+    
+    '''
+    
+    
+#Cycle Detection in Directed Graph (DFS)
+
+#for this we need to use two array approach
+
+class Solution:
+
+    def isCycle(self, adj):
+
+        n = len(adj)
+
+        visited = [False] * n
+        pathVisited = [False] * n
+
+        def dfs(node):
+
+            visited[node] = True
+            pathVisited[node] = True
+
+            for neighbour in adj[node]:
+
+                if not visited[neighbour]:
+
+                    if dfs(neighbour):
+                        return True
+
+                elif pathVisited[neighbour]:
+
+                    return True
+
+            # Remove node from current DFS path
+            pathVisited[node] = False
+
+            return False
+
+        # Handle disconnected graph
+        for i in range(n):
+
+            if not visited[i]:
+
+                if dfs(i):
+                    return True
+
+        return False
+    
+'''cyccle detection in directed graph using bfs
+
+
+Detect Cycle in a Directed Graph using BFS
+Last Updated :
+11 Jul, 2025
+Given a directed graph, check whether the graph contains a cycle or not. Your function should return true if the given graph contains at least one cycle, else return false. For example, the following graph contains two cycles 0->1->2->3->0 and 2->4->2, so your function must return true.
+
+
+
+We have discussed a DFS based solution to detect cycle in a directed graph. In this post, BFS based solution is discussed.
+The idea is to simply use Kahn's algorithm for Topological Sorting
+
+Steps involved in detecting cycle in a directed graph using BFS.
+Step-1: Compute in-degree (number of incoming edges) for each of the vertex present in the graph and initialize the count of visited nodes as 0.
+Step-2: Pick all the vertices with in-degree as 0 and add them into a queue (Enqueue operation)
+Step-3: Remove a vertex from the queue (Dequeue operation) and then. 
+
+Increment count of visited nodes by 1.
+Decrease in-degree by 1 for all its neighboring nodes.
+If in-degree of a neighboring nodes is reduced to zero, then add it to the queue.
+Step 4: Repeat Step 3 until the queue is empty.
+Step 5: If count of visited nodes is not equal to the number of nodes in the graph has cycle, otherwise not.
+
+How to find in-degree of each node? 
+There are 2 ways to calculate in-degree of every vertex: 
+Take an in-degree array which will keep track of 
+1) Traverse the array of edges and simply increase the counter of the destination node by 1. 
+
+for each node in Nodes
+    indegree[node] = 0;
+for each edge(src,dest) in Edges
+    indegree[dest]++
+Time Complexity: O(V+E)
+
+2) Traverse the list for every node and then increment the in-degree of all the nodes connected to it by 1. 
+
+    for each node in Nodes
+        If (list[node].size()!=0) then
+        for each dest in list
+            indegree[dest]++;
+Time Complexity: The outer for loop will be executed V number of times and the inner for loop will be executed E number of times, Thus overall time complexity is O(V+E).
+
+The overall time complexity of the algorithm is O(V+E) 
+
+'''
+
+# A Python3 program to check if there is a cycle in  
+# directed graph using BFS. 
+import math
+import sys
+from collections import defaultdict
+
+# # Class to represent a graph 
+# class Graph:
+#     def __init__(self,vertices):
+#         self.graph=defaultdict(list)
+#         self.V=vertices # No. of vertices' 
+    
+#     # function to add an edge to graph
+#     def addEdge(self,u,v):
+#         self.graph[u].append(v)
+
+# This function returns true if there is a cycle 
+# in directed graph, else returns false. 
+def isCycleExist(n,graph):
+
+    # Create a vector to store indegrees of all 
+    # vertices. Initialize all indegrees as 0. 
+    in_degree=[0]*n
+
+    # Traverse adjacency lists to fill indegrees of 
+    # vertices. This step takes O(V+E) time
+    for i in range(n):
+        for j in graph[i]:
+            in_degree[j]+=1
+    
+    # Create an queue and enqueue all vertices with 
+    # indegree 0
+    queue=[]
+    for i in range(len(in_degree)):
+        if in_degree[i]==0:
+            queue.append(i)
+    
+    # Initialize count of visited vertices
+    cnt=0
+
+    # One by one dequeue vertices from queue and enqueue 
+    # adjacents if indegree of adjacent becomes 0 
+    while(queue):
+
+        # Extract front of queue (or perform dequeue) 
+        # and add it to topological order 
+        nu=queue.pop(0)
+
+        # Iterate through all its neighbouring nodes 
+        # of dequeued node u and decrease their in-degree 
+        # by 1 
+        for v in graph[nu]:
+            in_degree[v]-=1
+
+            # If in-degree becomes zero, add it to queue
+            if in_degree[v]==0:
+                queue.append(v)
+        cnt+=1
+
+    # Check if there was a cycle 
+    if cnt==n:
+        return False
+    else:
+        return True
+        
+
+# Driver program to test above functions 
+
+    

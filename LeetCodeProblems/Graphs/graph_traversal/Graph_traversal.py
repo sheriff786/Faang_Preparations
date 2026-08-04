@@ -269,3 +269,65 @@ TRACE (starting from 0):
     DFS: Cycle detection, topological sort, connected components,
          path existence, backtracking problems
 """)
+
+
+'''
+Adjacency matrix with bfs
+
+
+'''
+
+from collections import deque
+
+class Solution:
+
+    def bfs(self, matrix):
+
+        v = len(matrix)
+
+        visited = [False] * v
+        result = []
+
+        queue = deque([0])
+        visited[0] = True
+
+        while queue:
+
+            node = queue.popleft()
+            result.append(node)
+
+            # Scan entire row
+            for neighbour in range(v):
+
+                if matrix[node][neighbour] == 1 and not visited[neighbour]:
+
+                    visited[neighbour] = True
+                    queue.append(neighbour)
+
+        return result
+    
+    
+class Solution:
+
+    def dfs(self, matrix):
+
+        v = len(matrix)
+
+        visited = [False] * v
+        result = []
+
+        def dfs_helper(node):
+
+            visited[node] = True
+            result.append(node)
+
+            # Scan the row
+            for neighbour in range(v):
+
+                if matrix[node][neighbour] == 1 and not visited[neighbour]:
+
+                    dfs_helper(neighbour)
+
+        dfs_helper(0)
+
+        return result
