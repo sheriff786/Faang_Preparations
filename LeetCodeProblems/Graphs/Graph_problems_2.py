@@ -218,3 +218,10 @@ def dfs(node):
     return copy
 
 '''
+
+'''
+question we will cover this this section are related to cycle detection topologies etc
+
+
+'''
+

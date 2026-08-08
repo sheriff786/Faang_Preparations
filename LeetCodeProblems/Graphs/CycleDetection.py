@@ -603,4 +603,161 @@ def isCycleExist(n,graph):
 
 # Driver program to test above functions 
 
+
+'''
+Topological sorting
+it is uses in DAG system direct Asyclic graph
+'''
+
+# Interview Version (Memorize)
+# 1. Find number of vertices.
+# 2. Create visited array.
+# 3. Create an empty stack.
+# 4. Run DFS for every unvisited vertex.
+# 5. Mark current node as visited.
+# 6. Visit all unvisited neighbours.
+# 7. After visiting all neighbours, push current node into the stack.
+# 8. Continue until all vertices are processed.
+# 9. Reverse the stack.
+# 10. Return the reversed stack.
+# Python Implementation (Handles Disconnected Graphs)
+class Solution:
+
+    def topoSort(self, adj):
+
+        n = len(adj)
+
+        visited = [False] * n
+        stack = []
+
+        def dfs(node):
+
+            visited[node] = True
+
+            for neighbour in adj[node]:
+
+                if not visited[neighbour]:
+                    dfs(neighbour)
+
+            # Push after exploring all neighbours
+            stack.append(node)
+
+        # Handle disconnected graph
+        for i in range(n):
+
+            if not visited[i]:
+                dfs(i)
+
+        # Reverse to get topological order
+        stack.reverse()
+
+        return stack
+Example
+adj = [
+    [1, 2],   # 0
+    [3],      # 1
+    [3],      # 2
+    []        # 3
+]
+
+obj = Solution()
+
+print(obj.topoSort(adj))
+
+# Possible Output
+
+# [0, 2, 1, 3]
+
+# Another valid answer could be
+
+# [0, 1, 2, 3]
+
+# Both are correct because topological ordering is not always unique.
+
+# Time Complexity
+# DFS Traversal : O(V + E)
+
+# Reverse Stack : O(V)
+
+# Overall : O(V + E)
+
+'''
+    
+    with bfs
+    
+    Interview Version (Memorize)
+1. Find number of vertices.
+2. Create indegree array.
+3. Calculate indegree of every vertex.
+4. Create an empty queue.
+5. Push all vertices with indegree = 0.
+6. Create an empty result list.
+7. While queue is not empty:
+      - Pop a node.
+      - Add it to the result.
+      - Visit all neighbours.
+      - Decrease their indegree.
+      - If indegree becomes 0, push into queue.
+8. Return the result.
+ '''
+ 
+from collections import deque
+
+class Solution:
+
+    def topoSort(self, adj):
+
+        n = len(adj)
+
+        # Step 1: Calculate indegree
+        indegree = [0] * n
+
+        for node in range(n):
+            for neighbour in adj[node]:
+                indegree[neighbour] += 1
+
+        # Step 2: Push all nodes with indegree 0
+        queue = deque()
+
+        for i in range(n):
+            if indegree[i] == 0:
+                queue.append(i)
+
+        # Step 3: Topological order
+        topo = []
+
+        while queue:
+
+            node = queue.popleft()
+
+            topo.append(node)
+
+            for neighbour in adj[node]:
+
+                indegree[neighbour] -= 1
+
+                if indegree[neighbour] == 0:
+                    queue.append(neighbour)
+
+        return topo
+adj = [
+    [1, 2],   # 0
+    [3],      # 1
+    [3],      # 2
+    []        # 3
+]
+
+obj = Solution()
+
+print(obj.topoSort(adj))
+
+# Possible Output:
+
+# [0, 1, 2, 3]
+
+# or
+
+# [0, 2, 1, 3]
+
+# Both are valid topological orderings.
     
