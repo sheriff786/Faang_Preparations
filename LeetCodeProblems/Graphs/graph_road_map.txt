@@ -1,0 +1,33 @@
+GRAPH
+│
+├── Phase 1: BFS / DFS / Connectivity
+│       └── ✅ DONE
+│
+├── Phase 2: Topological Sort
+│       └── ✅ DONE
+│
+├── Phase 3: Shortest Path
+│       ├── Dijkstra          ✅
+│       ├── Bellman-Ford      ✅
+│       ├── Floyd-Warshall    ✅
+│       └── Applications      🟢
+│
+├── Phase 4: MST
+│       ├── Prim's            ✅
+│       ├── Kruskal's         ✅
+│       └── DSU               ✅
+│
+├── Phase 5: Advanced DFS
+│       ├── Bridges           🟢 ← YOU ARE HERE
+│       ├── Articulation      ⏳
+│       └── Tarjan/SCC        ⏳
+│
+├── Phase 6: Bipartite
+│       └── ⏳
+│
+├── Phase 7: Advanced Shortest Path
+│       └── ⏳
+│
+└── Phase 8: Advanced Graph DP / SCC
+        └── ⏳
+
