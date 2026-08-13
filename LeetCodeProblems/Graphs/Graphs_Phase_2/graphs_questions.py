@@ -516,3 +516,648 @@ QUICK REVISION — BOTH SOLUTIONS SIDE BY SIDE:
     O(K*E), O(V)                            O(VK*log(VK)), O(VK)
 ================================================================================
 """
+"""
+================================================================================
+================================================================================
+LeetCode 909 — Snakes and Ladders (FAANG Interview Guide)
+================================================================================
+================================================================================
+
+PATTERN: BFS — Shortest Path in Unweighted Graph
+DIFFICULTY: Medium
+FREQUENCY: High (Amazon, Google, Goldman Sachs, Microsoft)
+
+================================================================================
+PROBLEM IN 10 SECONDS:
+================================================================================
+
+    Given an n×n board with snakes and ladders, find the MINIMUM number of
+    dice rolls to reach the last cell from cell 1. Each roll gives 1–6.
+
+    Think: "What's the fewest dice rolls to win the game?"
+
+================================================================================
+ONE-LINE TRICK TO REMEMBER:
+================================================================================
+
+    "Each cell is a NODE, each dice outcome is an EDGE, snakes/ladders are
+     TELEPORTERS. BFS level = one dice roll. Levels to reach end = answer."
+
+================================================================================
+WHY BFS? WHY NOT DFS OR DIJKSTRA?
+================================================================================
+
+    BFS is correct because:
+        → Every dice roll has cost = 1 (unweighted graph)
+        → BFS finds shortest path in unweighted graphs
+        → Each "level" of BFS = exactly one dice roll
+        → First time we reach the last cell = minimum rolls
+
+    DFS fails because:
+        → DFS explores deep paths first, might find a long path before a short one
+        → No guarantee of finding minimum rolls first
+
+    Dijkstra is overkill because:
+        → All edges have weight 1 → BFS is simpler and faster
+
+================================================================================
+THE MENTAL MODEL — Think of it as a GRAPH, not a board game:
+================================================================================
+
+    BOARD GAME VIEW (forget this):     GRAPH VIEW (think this):
+    ┌──┬──┬──┬──┬──┐                  Cell 1 is the START NODE
+    │20│19│18│17│16│                  Cell n*n is the END NODE
+    ├──┼──┼──┼──┼──┤                  From any cell, you have UP TO 6 edges
+    │11│12│13│14│15│                  (dice outcomes 1,2,3,4,5,6)
+    ├──┼──┼──┼──┼──┤                  Snakes/ladders = forced redirections
+    │10│ 9│ 8│ 7│ 6│                  BFS level count = dice rolls
+    ├──┼──┼──┼──┼──┤
+    │ 1│ 2│ 3│ 4│ 5│
+    └──┴──┴──┴──┴──┘
+
+    THE KEY INSIGHT:
+    ┌────────────────────────────────────────────────────────────────┐
+    │  Board cell  →  Graph node                                    │
+    │  Dice roll   →  Edge (up to 6 edges per node)                 │
+    │  Snake       →  Teleport DOWN (forced, no choice)             │
+    │  Ladder      →  Teleport UP (forced, no choice)               │
+    │  Min rolls   →  Shortest path in unweighted graph → BFS       │
+    └────────────────────────────────────────────────────────────────┘
+
+================================================================================
+EXAMPLE (n=20 cells, 0-indexed for code):
+================================================================================
+
+    moves = [-1, 18, -1, -1, -1, -1, -1, -1, 2, -1,
+             -1, -1, 15, -1, -1, -1, -1, -1, -1, -1]
+
+    Index:   0   1   2   3   4   5   6   7   8   9  10  11  12  ...  19
+
+    moves[i] = -1    → normal cell, no teleport
+    moves[1] = 18    → LADDER at cell 1, teleports you to cell 18
+    moves[8] = 2     → SNAKE at cell 8, teleports you DOWN to cell 2
+    moves[12] = 15   → LADDER at cell 12, teleports you to cell 15
+
+    Visual (1-indexed for clarity):
+    ┌─────────────────────────────────────────────────────────┐
+    │                                                         │
+    │   Cell 2 ───LADDER───→ Cell 19  (moves[1]=18, 0-idx)   │
+    │   Cell 9 ───SNAKE────→ Cell 3   (moves[8]=2,  0-idx)   │
+    │   Cell 13──LADDER───→ Cell 16  (moves[12]=15, 0-idx)   │
+    │                                                         │
+    │   Goal: reach Cell 20 (index 19) from Cell 1 (index 0) │
+    └─────────────────────────────────────────────────────────┘
+
+================================================================================
+ALGORITHM — 5 STEPS (memorize this):
+================================================================================
+
+    Step 1: queue = [start_cell], visited[start] = True, rolls = 0
+    Step 2: Process ALL cells in current queue (= one BFS level = one roll)
+    Step 3: For each cell, try dice 1–6 → compute next_cell
+    Step 4: If next_cell has a snake/ladder → TELEPORT (next_cell = moves[next_cell])
+    Step 5: If next_cell == last cell → return rolls + 1
+            If not visited → mark visited, add to queue
+
+    ┌─────────────────────────────────────────────────────────────────┐
+    │  CRITICAL RULE: You CANNOT choose to stay at a snake/ladder    │
+    │  cell. If you land there, you MUST teleport. That's why we     │
+    │  mark the DESTINATION as visited, not the snake/ladder cell.   │
+    └─────────────────────────────────────────────────────────────────┘
+
+================================================================================
+STEP-BY-STEP TRACE (n=20, 0-indexed):
+================================================================================
+
+    moves = [-1, 18, -1, -1, -1, -1, -1, -1, 2, -1, -1, -1, 15, -1, ...]
+
+    Start: queue=[0], visited={0}, rolls=0
+
+    ── ROLL 1 (BFS Level 1) ─────────────────────────────────────────
+    Pop cell 0. Try dice 1–6:
+        dice=1 → cell 1, moves[1]=18 → LADDER → teleport to 18. visited={0,18}
+        dice=2 → cell 2, moves[2]=-1 → normal.                visited={0,18,2}
+        dice=3 → cell 3, moves[3]=-1 → normal.                visited={0,18,2,3}
+        dice=4 → cell 4, moves[4]=-1 → normal.                visited={0,18,2,3,4}
+        dice=5 → cell 5, moves[5]=-1 → normal.                visited={...,5}
+        dice=6 → cell 6, moves[6]=-1 → normal.                visited={...,6}
+
+    After Roll 1: queue=[18, 2, 3, 4, 5, 6], rolls=1
+
+    ── ROLL 2 (BFS Level 2) ─────────────────────────────────────────
+    Pop cell 18. Try dice 1–6:
+        dice=1 → cell 19 = LAST CELL → RETURN rolls+1 = 2 ✓
+
+    ANSWER: 2 rolls
+
+    Path: Cell 0 →(dice 1)→ Cell 1 →(ladder)→ Cell 18 →(dice 1)→ Cell 19
+    In 1-indexed: Cell 1 → Cell 2 → [ladder to 19] → Cell 20 (WIN!)
+
+================================================================================
+WHY WE MARK THE TELEPORT DESTINATION, NOT THE LANDING CELL:
+================================================================================
+
+    When you land on cell 1 (which has a ladder to cell 18):
+
+    WRONG: mark cell 1 as visited
+        → Later, another path to cell 1 would be skipped
+        → But cell 1 itself is never "occupied" — you teleport immediately
+
+    CORRECT: mark cell 18 as visited (the teleport destination)
+        → Cell 1 is just a redirect, you never stay there
+        → You care about WHERE YOU END UP, not where you land
+
+    Analogy: an airport with an automatic conveyor belt.
+    You step on gate 1, it carries you to gate 18. You were never AT gate 1.
+
+================================================================================
+COMPLEXITY:
+================================================================================
+
+    Time:  O(N) — each cell is visited at most once (N = total cells)
+    Space: O(N) — visited array + queue
+
+================================================================================
+FAANG INTERVIEW TIPS:
+================================================================================
+
+    TIP 1: "Why BFS?" → All edges have weight 1 (one dice roll). BFS finds
+            shortest path in unweighted graphs. This is the #1 follow-up.
+
+    TIP 2: Snake/ladder cells are NOT "two edges." They are ONE edge
+            that goes directly to the teleport destination. The intermediate
+            cell doesn't exist as a stop.
+
+    TIP 3: On LeetCode 909, the board is n×n with zigzag numbering.
+            You need a helper to convert (row, col) ↔ cell number.
+            Practice that conversion separately.
+
+    TIP 4: "What if there's a snake at the last cell?"
+            → Impossible by problem constraints, but clarify with interviewer.
+
+    TIP 5: "Can a ladder lead to another ladder?"
+            → Yes! But you DON'T chain them. You only teleport ONCE per landing.
+            → (Some variants do chain — ask the interviewer.)
+
+    TIP 6: Common mistake: forgetting to check next_cell >= n (going off board).
+            Dice can push you past the last cell — those moves are invalid.
+
+================================================================================
+PATTERN RECOGNITION — When to use this approach:
+================================================================================
+
+    See this?                          → Think this:
+    ─────────────────────────────────────────────────────
+    "Minimum moves/steps/rolls"        → BFS shortest path
+    "Grid/board with teleports"        → Nodes + redirect edges
+    "Each move has equal cost"         → Unweighted → BFS not Dijkstra
+    "Reach from start to end"          → Single-source shortest path
+
+================================================================================
+QUICK REVISION CHEAT SHEET:
+================================================================================
+
+    Pattern: BFS on unweighted graph (each roll = 1 level)
+
+    Template:
+        queue = [start], visited[start] = True, rolls = 0
+        while queue:
+            for each cell in current level:
+                for dice 1–6:
+                    next = cell + dice
+                    if snake/ladder: next = moves[next]
+                    if next == end: return rolls + 1
+                    if not visited: add to queue
+            rolls += 1
+        return -1
+
+    Key points:
+        ✓ Mark teleport DESTINATION visited, not the snake/ladder cell
+        ✓ Teleport is forced, not optional
+        ✓ Don't go past the last cell
+        ✓ Time O(N), Space O(N)
+
+    Common mistakes:
+        ✗ Using DFS → doesn't guarantee minimum
+        ✗ Chaining teleports (ladder → ladder) → only teleport once
+        ✗ Marking the snake/ladder cell visited instead of destination
+        ✗ Forgetting bounds check (next_cell >= n)
+================================================================================
+"""
+from collections import deque
+
+
+def snakes_and_ladders(n, moves):
+    queue = deque([0])                # 0-indexed: cell 1 = index 0
+    visited = [False] * n
+    visited[0] = True
+    rolls = 0
+
+    while queue:
+        for _ in range(len(queue)):   # process one BFS level = one dice roll
+            current = queue.popleft()
+
+            if current == n - 1:      # reached the last cell
+                return rolls
+
+            for dice in range(1, 7):  # dice outcomes 1–6
+                next_cell = current + dice
+
+                if next_cell >= n:    # off the board
+                    continue
+
+                if moves[next_cell] != -1:        # snake or ladder
+                    next_cell = moves[next_cell]   # forced teleport
+
+                if not visited[next_cell]:
+                    visited[next_cell] = True
+                    queue.append(next_cell)
+
+        rolls += 1
+
+    return -1
+
+
+# ── Example ──
+n = 20
+moves = [
+    -1, 18, -1, -1, -1, -1, -1, -1,
+     2, -1, -1, -1, 15, -1, -1, -1,
+    -1, -1, -1, -1
+]
+print("\n--- Snakes and Ladders ---")
+print("Min rolls:", snakes_and_ladders(n, moves))  # 2
+
+"""
+================================================================================
+================================================================================
+Complete All Courses With Dependencies (Course Schedule — FAANG Interview Guide)
+================================================================================
+================================================================================
+
+PATTERN: Topological Sort (Kahn's BFS) / Cycle Detection in Directed Graph
+DIFFICULTY: Medium
+FREQUENCY: Very High (Amazon, Google, Facebook, Microsoft, Apple)
+RELATED: LeetCode 207 (Course Schedule I), LeetCode 210 (Course Schedule II)
+
+================================================================================
+PROBLEM IN 10 SECONDS:
+================================================================================
+
+    Given n courses and prerequisite pairs (a[i] must come before b[i]),
+    can you take ALL n courses without violating any prerequisite?
+
+    Think: "Is there a valid order to do everything?"
+
+================================================================================
+ONE-LINE TRICK TO REMEMBER:
+================================================================================
+
+    "Prerequisite = arrow. Cycle = deadlock = impossible.
+     No cycle = topological order exists = possible."
+
+================================================================================
+THE 3-SECOND MENTAL MODEL:
+================================================================================
+
+    See "A must happen before B" → Draw arrow A → B
+
+    Then ask ONE question:
+
+        "Does the graph have a CYCLE?"
+
+        ┌──────────────┐              ┌──────────────┐
+        │   NO CYCLE   │              │    CYCLE     │
+        │              │              │              │
+        │  A → B → C   │              │  A → B → C  │
+        │  (can order)  │              │  ↑       ↓  │
+        │              │              │  └───────┘  │
+        │  return 1    │              │  (deadlock)  │
+        │  (possible)  │              │  return 0    │
+        └──────────────┘              └──────────────┘
+
+================================================================================
+WHY A CYCLE = IMPOSSIBLE (the deadlock analogy):
+================================================================================
+
+    Imagine 3 people at a door:
+
+        Alice says: "I'll go in AFTER Bob"
+        Bob says:   "I'll go in AFTER Carol"
+        Carol says: "I'll go in AFTER Alice"
+
+        Alice waits for Bob → Bob waits for Carol → Carol waits for Alice
+        → EVERYONE WAITS FOREVER → DEADLOCK
+
+    That's exactly what a cycle means in prerequisites:
+
+        Course A needs B first
+        Course B needs C first
+        Course C needs A first
+
+        A → B → C → A   (cycle → impossible)
+
+================================================================================
+EXAMPLE 1 (No Cycle → Possible):
+================================================================================
+
+    n = 4, a = [1, 1, 3], b = [0, 2, 1]
+
+    Step 1: Convert pairs to arrows
+        a[0]=1, b[0]=0  →  1 → 0  (take 1 before 0)
+        a[1]=1, b[1]=2  →  1 → 2  (take 1 before 2)
+        a[2]=3, b[2]=1  →  3 → 1  (take 3 before 1)
+
+    Step 2: Draw the graph
+             ┌──→ 0
+             │
+        3 → 1 ──→ 2
+
+    Step 3: Check for cycle → NO CYCLE
+
+    Step 4: Find a valid order
+        Course 3 has no prerequisites → take it first
+        Course 1 now has no remaining prerequisites → take it next
+        Course 0 and 2 now free → take them
+
+        Valid order: 3 → 1 → 0 → 2  ✓
+
+    Answer: 1 (possible)
+
+================================================================================
+EXAMPLE 2 (Cycle → Impossible):
+================================================================================
+
+    n = 4, a = [1, 1, 3, 0], b = [0, 2, 1, 3]
+
+    Step 1: Convert pairs to arrows
+        1 → 0
+        1 → 2
+        3 → 1
+        0 → 3    ← this creates a cycle!
+
+    Step 2: Draw the graph
+        3 → 1 → 0 → 3    ← CYCLE: 3 → 1 → 0 → 3
+
+    Step 3: Trace the deadlock
+
+        To take 1 → need 3 first
+        To take 3 → need 0 first    (because 0 → 3)
+        To take 0 → need 1 first    (because 1 → 0)
+
+        1 needs 3 needs 0 needs 1 needs 3 needs 0 ... FOREVER
+
+    Answer: 0 (impossible)
+
+================================================================================
+THE ALGORITHM — KAHN'S BFS TOPOLOGICAL SORT (memorize these 4 steps):
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │  Step 1: Build graph + count indegrees                              │
+    │          For each a[i] → b[i]: add edge, indegree[b[i]] += 1       │
+    │                                                                     │
+    │  Step 2: Queue all courses with indegree = 0                        │
+    │          (these have NO prerequisites — safe to take first)         │
+    │                                                                     │
+    │  Step 3: BFS loop — take a course, reduce indegrees of dependents   │
+    │          When a dependent's indegree hits 0 → add to queue          │
+    │                                                                     │
+    │  Step 4: If completed == n → return 1 (all courses taken)           │
+    │          If completed < n  → return 0 (cycle blocked some courses)  │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+    REAL-LIFE ANALOGY:
+        You have a pile of tasks with sticky notes saying "wait for X first."
+        Start with tasks that have NO sticky notes (indegree 0).
+        Complete them, then PEEL OFF their sticky notes from other tasks.
+        Any task whose last sticky note was peeled → now ready to do.
+        If you finish all tasks → success. If some still have sticky notes → cycle.
+
+================================================================================
+INDEGREE — THE KEY CONCEPT:
+================================================================================
+
+    Indegree of a node = number of arrows POINTING INTO it
+                       = number of prerequisites it still needs
+
+    Example 1: a=[1,1,3], b=[0,2,1]  (edges: 1→0, 1→2, 3→1)
+
+        Course │ Arrows pointing in │ Indegree │ Meaning
+        ───────┼────────────────────┼──────────┼────────────────────────
+          0    │ 1→0                │    1     │ needs 1 course first
+          1    │ 3→1                │    1     │ needs 1 course first
+          2    │ 1→2                │    1     │ needs 1 course first
+          3    │ (none)             │    0     │ NO prerequisites → START HERE
+
+    Courses with indegree 0 = courses you can take RIGHT NOW.
+
+================================================================================
+STEP-BY-STEP TRACE — EXAMPLE 1:
+================================================================================
+
+    Graph: 3 → 1 → 0, 1 → 2
+    Indegree: [1, 1, 1, 0]
+    Queue starts with: [3]  (only course with indegree 0)
+    completed = 0
+
+    ── Iteration 1 ────────────────────────────────────────────────────
+    Pop course 3
+    completed = 1
+    Course 3's neighbors: [1]
+        indegree[1] = 1-1 = 0  → indegree is 0! → add 1 to queue
+
+    Queue: [1]    Indegree: [1, 0, 1, 0]
+
+    ── Iteration 2 ────────────────────────────────────────────────────
+    Pop course 1
+    completed = 2
+    Course 1's neighbors: [0, 2]
+        indegree[0] = 1-1 = 0  → add 0 to queue
+        indegree[2] = 1-1 = 0  → add 2 to queue
+
+    Queue: [0, 2]    Indegree: [0, 0, 0, 0]
+
+    ── Iteration 3 ────────────────────────────────────────────────────
+    Pop course 0
+    completed = 3
+    Course 0's neighbors: []  (nothing depends on 0)
+
+    ── Iteration 4 ────────────────────────────────────────────────────
+    Pop course 2
+    completed = 4
+    Course 2's neighbors: []
+
+    Queue empty. completed = 4 = n → RETURN 1 ✓
+
+    Order taken: 3 → 1 → 0 → 2
+
+================================================================================
+STEP-BY-STEP TRACE — EXAMPLE 2 (Cycle):
+================================================================================
+
+    Edges: 1→0, 1→2, 3→1, 0→3
+    Indegree: [1, 1, 1, 1]   ← EVERY course has at least 1 prerequisite!
+
+    Queue starts with: []  (NO course has indegree 0)
+
+    Queue is immediately empty.
+    completed = 0, but n = 4.
+    0 ≠ 4 → RETURN 0 ✗ (cycle detected)
+
+    Why? The cycle 0→3→1→0 means those 3 courses are stuck waiting for
+    each other. None of them can ever reach indegree 0.
+
+================================================================================
+WHY completed < n MEANS CYCLE:
+================================================================================
+
+    In a cycle, every node in the cycle always has indegree ≥ 1.
+    No node in the cycle ever gets added to the queue.
+    So they never get "completed."
+
+    If any nodes remain uncompleted → they must be part of (or blocked by) a cycle.
+
+    ┌────────────────────────────────────────────────────┐
+    │  completed == n  →  no cycle  →  all courses done  │
+    │  completed < n   →  cycle     →  some stuck forever│
+    └────────────────────────────────────────────────────┘
+
+================================================================================
+COMPLEXITY:
+================================================================================
+
+    Time:  O(V + E) — visit each course once, process each edge once
+           V = n (courses), E = len(a) (dependencies)
+    Space: O(V + E) — adjacency list + indegree array + queue
+
+================================================================================
+FAANG INTERVIEW TIPS:
+================================================================================
+
+    TIP 1: "What algorithm is this?"
+            → Kahn's Algorithm (BFS-based Topological Sort)
+            → Equivalent to cycle detection in a directed graph
+
+    TIP 2: "Can you also use DFS?"
+            → Yes! DFS with 3-color marking (white/gray/black).
+            → Gray node visited again = cycle (back edge).
+            → Kahn's BFS is easier to code and explain.
+
+    TIP 3: "What if they ask for the actual ORDER?" (Course Schedule II)
+            → Same algorithm, just collect the order in a list:
+              order.append(course) each time you pop from queue
+            → Return order if len(order) == n, else return []
+
+    TIP 4: "What if the graph is disconnected?"
+            → Kahn's handles this automatically!
+            → Multiple components each get their indegree-0 nodes queued.
+
+    TIP 5: Common follow-ups:
+            → "Return any valid order" → collect popped courses
+            → "Return ALL valid orders" → backtracking
+            → "Minimum semesters to finish" → BFS level count (parallel courses)
+
+    TIP 6: Off-by-one trap — make sure you handle:
+            → Courses labeled 0 to n-1 (not 1 to n)
+            → Self-loops (a[i] == a[i] → instant cycle, but problem says a[i] != b[i])
+
+================================================================================
+THE FAMILY OF COURSE SCHEDULE PROBLEMS:
+================================================================================
+
+    Problem                     │ What it asks              │ Core technique
+    ────────────────────────────┼───────────────────────────┼──────────────────
+    Course Schedule I (LC 207)  │ Can all be completed?     │ Cycle detection
+    Course Schedule II (LC 210) │ Return a valid order      │ Topological sort
+    Course Schedule III (LC 630)│ Max courses by deadlines  │ Greedy + heap
+    Course Schedule IV (LC 1462)│ Is A prerequisite of B?   │ Floyd-Warshall/BFS
+    This problem                │ Same as LC 207            │ Kahn's BFS
+
+================================================================================
+PATTERN RECOGNITION — When to use Topological Sort:
+================================================================================
+
+    See this?                              → Think this:
+    ─────────────────────────────────────────────────────────────
+    "Must do X before Y"                   → Directed edge X → Y
+    "Is there a valid ordering?"           → Cycle detection
+    "Find a valid ordering"               → Topological sort
+    "Build order / compile order"          → Same pattern
+    "Minimum time with parallel tasks"     → BFS topo sort (level = time unit)
+
+================================================================================
+QUICK REVISION CHEAT SHEET:
+================================================================================
+
+    Pattern: Kahn's BFS Topological Sort
+
+    Template:
+        graph = [[] for _ in range(n)]
+        indegree = [0] * n
+        for each a[i] → b[i]:
+            graph[a[i]].append(b[i])
+            indegree[b[i]] += 1
+        queue = [c for c in range(n) if indegree[c] == 0]
+        completed = 0
+        while queue:
+            course = queue.pop()
+            completed += 1
+            for next in graph[course]:
+                indegree[next] -= 1
+                if indegree[next] == 0: queue.append(next)
+        return completed == n
+
+    Key points:
+        ✓ Indegree 0 = no prerequisites = safe to start
+        ✓ Completing a course reduces dependents' indegree
+        ✓ Cycle → some nodes never reach indegree 0 → completed < n
+        ✓ Time O(V+E), Space O(V+E)
+
+    Common mistakes:
+        ✗ Forgetting to build the indegree array
+        ✗ Using undirected edges (prerequisites are DIRECTED)
+        ✗ Returning the wrong boolean (1 = possible, 0 = impossible)
+        ✗ Not handling disconnected components (Kahn's handles it!)
+================================================================================
+"""
+
+from collections import deque
+
+
+def can_be_completed(n, a, b):
+    graph = [[] for _ in range(n)]
+    indegree = [0] * n
+
+    for i in range(len(a)):
+        graph[a[i]].append(b[i])
+        indegree[b[i]] += 1
+
+    queue = deque()
+    for course in range(n):
+        if indegree[course] == 0:
+            queue.append(course)
+
+    completed = 0
+
+    while queue:
+        course = queue.popleft()
+        completed += 1
+
+        for next_course in graph[course]:
+            indegree[next_course] -= 1
+            if indegree[next_course] == 0:
+                queue.append(next_course)
+
+    return completed == n
+
+
+# ── Examples ──
+print("\n--- Course Dependencies ---")
+print("Example 1:", can_be_completed(4, [1, 1, 3], [0, 2, 1]))       # True  (order: 3→1→0→2)
+print("Example 2:", can_be_completed(4, [1, 1, 3, 0], [0, 2, 1, 3])) # False (cycle: 0→3→1→0)
+
+
+
