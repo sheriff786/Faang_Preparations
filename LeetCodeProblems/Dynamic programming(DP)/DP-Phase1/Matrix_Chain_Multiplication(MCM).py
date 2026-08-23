@@ -380,6 +380,83 @@ print(f"Cost: {cost}, Parenthesization: {brackets}")
 
 """
 ================================================================================
+▶▶▶  WALKTHROUGH — MCM STEP-BY-STEP WITH EXAMPLE  ◀◀◀
+================================================================================
+
+    EXAMPLE: arr = [10, 30, 5, 60]
+    Matrices: A1(10×30), A2(30×5), A3(5×60)
+    Goal: Minimize total scalar multiplications for A1 × A2 × A3
+    Call: solve(arr, i=1, j=3)
+
+    RECURSION TREE:
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                      solve(1, 3)                                │
+    │                    ┌──────┴──────┐                              │
+    │                  k=1            k=2                              │
+    │          (A1 | A2·A3)      (A1·A2 | A3)                        │
+    └──────────────────────────────────────────────────────────────────┘
+
+    STEP 1 — k=1: Split as (A1) × (A2 · A3)
+    ─────────────────────────────────────────
+        left  = solve(1, 1) = 0              ← A1 alone, 0 cost
+        right = solve(2, 3)                  ← must solve A2 × A3
+        merge = arr[0] * arr[1] * arr[3]     ← multiply results: (10×30) × (30×60)
+              = 10 * 30 * 60 = 18000
+
+        ► Solving solve(2, 3) — only k=2 possible:
+          left  = solve(2, 2) = 0            ← A2 alone
+          right = solve(3, 3) = 0            ← A3 alone
+          merge = arr[1] * arr[2] * arr[3]   ← A2(30×5) × A3(5×60)
+                = 30 * 5 * 60 = 9000
+          return 9000
+
+        Total cost(k=1) = 0 + 9000 + 18000 = 27000
+        Physical meaning: A2×A3 costs 9000 → gives 30×60 matrix
+                          A1 × (30×60) costs 18000
+
+    STEP 2 — k=2: Split as (A1 · A2) × (A3)
+    ─────────────────────────────────────────
+        left  = solve(1, 2)                  ← must solve A1 × A2
+        right = solve(3, 3) = 0              ← A3 alone
+        merge = arr[0] * arr[2] * arr[3]     ← multiply results: (10×5) × (5×60)
+              = 10 * 5 * 60 = 3000
+
+        ► Solving solve(1, 2) — only k=1 possible:
+          left  = solve(1, 1) = 0
+          right = solve(2, 2) = 0
+          merge = arr[0] * arr[1] * arr[2]   ← A1(10×30) × A2(30×5)
+                = 10 * 30 * 5 = 1500
+          return 1500
+
+        Total cost(k=2) = 1500 + 0 + 3000 = 4500
+        Physical meaning: A1×A2 costs 1500 → gives 10×5 matrix (SMALL!)
+                          (10×5) × A3(5×60) costs 3000
+
+    STEP 3 — Pick minimum:
+    ─────────────────────
+        min(27000, 4500) = 4500  ✓
+        Best parenthesization: (A1 × A2) × A3
+
+    WHY IS k=2 BETTER?
+    ┌──────────────────────────────────────────────────────────────────┐
+    │  k=1: A2×A3 → big 30×60 matrix → expensive to multiply with A1 │
+    │  k=2: A1×A2 → small 10×5 matrix → cheap to multiply with A3    │
+    │  Lesson: Intermediate matrix SIZE determines the cost!          │
+    └──────────────────────────────────────────────────────────────────┘
+
+    MERGE COST FORMULA — WHY arr[i-1] * arr[k] * arr[j]?
+    ────────────────────────────────────────────────────
+    After solving left (i..k) → result matrix has dims arr[i-1] × arr[k]
+    After solving right (k+1..j) → result matrix has dims arr[k] × arr[j]
+    Multiplying these two matrices costs: arr[i-1] × arr[k] × arr[j]
+
+    Example at k=2:
+        Left result (A1·A2):  arr[0]×arr[2] = 10×5
+        Right result (A3):    arr[2]×arr[3] = 5×60
+        Merge cost:           10 × 5 × 60 = 3000  ✓
+
+
+================================================================================
 ================================================================================
     PROBLEM 2: PALINDROME PARTITIONING (LC 132 — Hard)
     (Google, Amazon, Microsoft, Meta)
@@ -600,6 +677,78 @@ PALINDROME PARTITIONING — INTERVIEW TRICKS:
              pal[i][j] = (s[i] == s[j]) and pal[i+1][j-1]
     
     TRICK 4: Common follow-up: "Print all partitions" → use backtracking (LC 131)
+
+
+================================================================================
+▶▶▶  WALKTHROUGH — PALINDROME PARTITIONING STEP-BY-STEP  ◀◀◀
+================================================================================
+
+    EXAMPLE: s = "aab"
+    Goal: Minimum cuts so every part is a palindrome.
+    Call: solve(s, i=0, j=2)
+
+    RECURSION TREE:
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                    solve(0, 2)  ["aab"]                         │
+    │                 is_palindrome? NO                               │
+    │                  ┌──────┴──────┐                                │
+    │                k=0            k=1                                │
+    │          ["a"|"ab"]      ["aa"|"b"]                            │
+    └──────────────────────────────────────────────────────────────────┘
+
+    STEP 1 — k=0: Cut after index 0 → "a" | "ab"
+    ─────────────────────────────────────────────
+        cost = 1 + solve(0, 0) + solve(1, 2)
+
+        solve(0, 0) = 0                      ← "a" single char, base case
+
+        ► solve(1, 2): s[1..2] = "ab"
+          is_palindrome("ab")? NO
+          k=1: 1 + solve(1,1) + solve(2,2)
+               = 1 + 0 + 0 = 1              ← cut "a" | "b"
+          return 1
+
+        cost(k=0) = 1 + 0 + 1 = 2
+        Cuts: "a" | "a" | "b"  → 2 cuts
+
+    STEP 2 — k=1: Cut after index 1 → "aa" | "b"
+    ─────────────────────────────────────────────
+        cost = 1 + solve(0, 1) + solve(2, 2)
+
+        ► solve(0, 1): s[0..1] = "aa"
+          is_palindrome("aa")? YES → return 0  ← CRITICAL OPTIMIZATION!
+
+        solve(2, 2) = 0                      ← "b" single char
+
+        cost(k=1) = 1 + 0 + 0 = 1
+        Cuts: "aa" | "b"  → 1 cut
+
+    STEP 3 — Pick minimum:
+    ─────────────────────
+        min(2, 1) = 1  ✓
+        Best: "aa" | "b" → 1 cut
+
+    KEY OBSERVATION:
+    ┌──────────────────────────────────────────────────────────────────┐
+    │  The "is_palindrome → return 0" check PRUNES the tree hugely.  │
+    │  Without it: solve(0,1) would try k=0: 1+solve(0,0)+solve(1,1) │
+    │  = 1+0+0 = 1. With the check: we skip that entirely → return 0 │
+    │  This optimization turns TLE into AC on large inputs!           │
+    └──────────────────────────────────────────────────────────────────┘
+
+    ANOTHER EXAMPLE: s = "nitin"
+    solve(0, 4): is_palindrome("nitin")? YES → return 0 immediately!
+    No recursion needed at all. That's the power of the palindrome check.
+
+    BOTTOM-UP TRACE for s = "aab" (O(n²) version):
+    ─────────────────────────────────────────────────
+    Palindrome table:     dp (min cuts for s[0..i]):
+        a  a  b                i=0: pal[0][0]=T → dp[0]=0
+    a  [T  T  F]              i=1: pal[0][1]=T → dp[1]=0  ("aa" is palindrome)
+    a  [.  T  F]              i=2: pal[0][2]=F, check j=1..2:
+    b  [.  .  T]                   pal[1][2]=F ("ab"), pal[2][2]=T ("b")
+                                   dp[2] = min(dp[2], dp[1]+1) = min(2, 0+1) = 1
+    Answer: dp[2] = 1  ✓
 
 
 ================================================================================
@@ -854,6 +1003,80 @@ print(f"Bottom-Up '{expr}' → True ways: {boolean_parenthesization_bottom_up(ex
 
 """
 ================================================================================
+▶▶▶  WALKTHROUGH — BOOLEAN PARENTHESIZATION STEP-BY-STEP  ◀◀◀
+================================================================================
+
+    EXAMPLE: expr = "T^F|F"
+    Symbols:   T(pos 0), F(pos 2), F(pos 4)
+    Operators: ^(pos 1), |(pos 3)
+    Goal: How many ways to parenthesize so result = TRUE?
+
+    CALL: solve(0, 4, is_true=True)
+
+    RECURSION TREE:
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                  solve(0, 4, True)                              │
+    │                ┌───────┴───────┐                                │
+    │          k=1 (op: ^)      k=3 (op: |)                          │
+    │       [T] ^ [F|F]        [T^F] | [F]                           │
+    └──────────────────────────────────────────────────────────────────┘
+
+    STEP 1 — k=1 (operator ^): Split as [T] ^ [F|F]
+    ─────────────────────────────────────────────────
+        LEFT = solve(0, 0):   symbol is T
+            left_true  = 1   (T is True)
+            left_false = 0
+
+        RIGHT = solve(2, 4):  expression is "F|F"
+            Only operator at k=3 (|):
+            lt=0(F), lf=1, rt=0(F), rf=1
+            OR truth table:  true_ways = lt*rt + lt*rf + lf*rt
+                                       = 0*0  + 0*1  + 1*0 = 0
+            right_true  = 0
+            right_false = 1   (F|F = F, only 1 way)
+
+        XOR truth table:  true_ways = LT*RF + LF*RT
+                                    = 1*1  + 0*0  = 1
+        k=1 contributes 1 way
+        Meaning: T ^ (F|F) = T ^ F = True  ✓
+
+    STEP 2 — k=3 (operator |): Split as [T^F] | [F]
+    ─────────────────────────────────────────────────
+        LEFT = solve(0, 2):  expression is "T^F"
+            Only operator at k=1 (^):
+            lt=1(T), lf=0, rt=0(F), rf=1
+            XOR: true_ways = lt*rf + lf*rt = 1*1 + 0*0 = 1
+            left_true  = 1    (T^F = True)
+            left_false = 0
+
+        RIGHT = solve(4, 4): symbol is F
+            right_true  = 0
+            right_false = 1
+
+        OR truth table:  true_ways = LT*RT + LT*RF + LF*RT
+                                   = 1*0  + 1*1  + 0*0  = 1
+        k=3 contributes 1 way
+        Meaning: (T^F) | F = T | F = True  ✓
+
+    STEP 3 — Total:
+    ─────────────────
+        ans = 1 + 1 = 2  ✓
+        The 2 ways:
+          Way 1: T ^ (F|F) = T ^ F = True
+          Way 2: (T^F) | F = T | F = True
+
+    WHY WE TRACK BOTH TRUE AND FALSE COUNTS:
+    ┌──────────────────────────────────────────────────────────────────┐
+    │  At each split, we need ALL 4 values: LT, LF, RT, RF           │
+    │  Because operators combine them differently:                    │
+    │    XOR needs LT*RF (left true, right false) for a true result  │
+    │    AND needs LT*RT (both true) for a true result               │
+    │    OR  needs LF*RF (both false) for a false result             │
+    │  You can't compute true_ways without knowing false_ways too!   │
+    └──────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
 ================================================================================
     PROBLEM 4: SCRAMBLE STRING (LC 87 — Hard)
     (Google, Amazon, Microsoft)
@@ -1043,6 +1266,72 @@ print(f"Bottom-Up ('abcde','caebd'): {scramble_string_bottom_up('abcde', 'caebd'
 
 
 """
+================================================================================
+▶▶▶  WALKTHROUGH — SCRAMBLE STRING STEP-BY-STEP  ◀◀◀
+================================================================================
+
+    EXAMPLE: s1 = "great", s2 = "rgeat"
+    Goal: Is s2 a scrambled version of s1?
+
+    HOW SCRAMBLING WORKS (visual):
+    ┌──────────────────────────────────────────────────────────────────┐
+    │     "great"                                                     │
+    │     ┌──┴───┐                                                    │
+    │    "gr"  "eat"    ← split at k=2                               │
+    │    ┌┴┐                                                          │
+    │   "g""r"          ← split at k=1                               │
+    │    SWAP!          ← swap "g" and "r"                           │
+    │   "r""g"                                                        │
+    │    └┬┘                                                          │
+    │    "rg"  "eat"    ← recombine                                  │
+    │     └──┬───┘                                                    │
+    │     "rgeat"       ← result!                                    │
+    └──────────────────────────────────────────────────────────────────┘
+
+    CALL: scramble("great", "rgeat")
+
+    s1 ≠ s2, sorted(s1) == sorted(s2) ✓, proceed to try splits.
+
+    k=1: NO SWAP: scramble("g","r") → sorted differ → False
+         SWAP:    scramble("g","t") → sorted differ → False
+         → False
+
+    k=2: NO SWAP: scramble("gr","rg") AND scramble("eat","eat")
+    ──────────────────────────────────────────────────────────
+         ► scramble("eat","eat"): s1 == s2 → True  ✓
+
+         ► scramble("gr","rg"): s1 ≠ s2, sorted match ✓
+           k=1: NO SWAP: scramble("g","r") → False
+                SWAP:    scramble("g","g") → True  ✓
+                         scramble("r","r") → True  ✓
+                True AND True → True!
+           → True  ✓
+
+         True AND True → True!  ✓  (we can stop here)
+
+    ANSWER: True
+    Split "great" at k=2 → "gr" + "eat"
+    Swap "gr" → "rg" (by splitting "gr" at k=1 and swapping)
+    Result: "rg" + "eat" = "rgeat"  ✓
+
+    THE TWO CASES AT EACH SPLIT (visual):
+    ┌──────────────────────────────────────────────────────────────────┐
+    │  s1 = [  LEFT1  |  RIGHT1  ]     (split at position k)         │
+    │                                                                 │
+    │  NO SWAP:  s2 = [ LEFT2 | RIGHT2 ]                             │
+    │            LEFT1↔LEFT2  and  RIGHT1↔RIGHT2                     │
+    │            scramble(s1[:k], s2[:k]) AND scramble(s1[k:], s2[k:])│
+    │                                                                 │
+    │  SWAP:     s2 = [ RIGHT2 | LEFT2 ]                             │
+    │            LEFT1↔RIGHT_END  and  RIGHT1↔LEFT_START             │
+    │            scramble(s1[:k], s2[n-k:]) AND scramble(s1[k:],s2[:n-k])│
+    └──────────────────────────────────────────────────────────────────┘
+
+    COUNTER-EXAMPLE: s1 = "abcde", s2 = "caebd" → False
+    sorted(s1) = "abcde" == sorted(s2) ✓, but NO split sequence works.
+    All k values for all sub-problems eventually return False.
+
+
 ================================================================================
 ================================================================================
     PROBLEM 5: EGG DROPPING PROBLEM (LC 887 — Hard)
@@ -1312,6 +1601,92 @@ EGG DROP — INTERVIEW TRICKS:
 
 
 ================================================================================
+▶▶▶  WALKTHROUGH — EGG DROPPING STEP-BY-STEP  ◀◀◀
+================================================================================
+
+    EXAMPLE: 2 eggs, 6 floors
+    Goal: Minimum trials in the WORST CASE to find the critical floor.
+
+    BUILDING THE DP TABLE:
+    ─────────────────────
+    Base cases:
+        dp[1][f] = f  (1 egg → must try every floor linearly)
+        dp[e][0] = 0  (0 floors → no trials needed)
+        dp[e][1] = 1  (1 floor → just try it)
+
+              floors →  0   1   2   3   4   5   6
+    1 egg (dp[1]):      [0] [1] [2] [3] [4] [5] [6]   ← linear search
+    2 eggs (dp[2]):     [0] [1] [?] [?] [?] [?] [?]   ← need to fill
+
+    FILLING dp[2][2]  (2 eggs, 2 floors):
+    ─────────────────────────────────────
+    Try dropping from each floor k:
+        k=1: 1 + max(dp[1][0], dp[2][1]) = 1 + max(0, 1) = 2
+             ↑ egg breaks → 1 egg, 0 floors below
+                            ↑ egg survives → 2 eggs, 1 floor above
+        k=2: 1 + max(dp[1][1], dp[2][0]) = 1 + max(1, 0) = 2
+    dp[2][2] = min(2, 2) = 2
+
+    FILLING dp[2][3]  (2 eggs, 3 floors):
+    ─────────────────────────────────────
+        k=1: 1 + max(dp[1][0], dp[2][2]) = 1 + max(0, 2) = 3
+        k=2: 1 + max(dp[1][1], dp[2][1]) = 1 + max(1, 1) = 2  ✓
+        k=3: 1 + max(dp[1][2], dp[2][0]) = 1 + max(2, 0) = 3
+    dp[2][3] = min(3, 2, 3) = 2
+    Strategy: Start at floor 2.
+
+    FILLING dp[2][4]  (2 eggs, 4 floors):
+    ─────────────────────────────────────
+        k=1: 1 + max(0, dp[2][3]) = 1 + 2 = 3
+        k=2: 1 + max(1, dp[2][2]) = 1 + 2 = 3
+        k=3: 1 + max(2, dp[2][1]) = 1 + 2 = 3
+        k=4: 1 + max(3, 0) = 4
+    dp[2][4] = 3
+
+    FILLING dp[2][5]  (2 eggs, 5 floors):
+    ─────────────────────────────────────
+        k=1: 1 + max(0, dp[2][4]) = 1 + 3 = 4
+        k=2: 1 + max(1, dp[2][3]) = 1 + 2 = 3  ✓
+        k=3: 1 + max(2, dp[2][2]) = 1 + 2 = 3  ✓
+        k=4: 1 + max(3, dp[2][1]) = 1 + 3 = 4
+        k=5: 1 + max(4, 0) = 5
+    dp[2][5] = 3
+
+    FILLING dp[2][6]  (2 eggs, 6 floors):
+    ─────────────────────────────────────
+        k=1: 1 + max(0, dp[2][5]) = 1 + 3 = 4
+        k=2: 1 + max(1, dp[2][4]) = 1 + 3 = 4
+        k=3: 1 + max(2, dp[2][3]) = 1 + 2 = 3  ✓ (BEST!)
+        k=4: 1 + max(3, dp[2][2]) = 1 + 3 = 4
+        k=5: 1 + max(4, dp[2][1]) = 1 + 4 = 5
+        k=6: 1 + max(5, 0) = 6
+    dp[2][6] = 3  ✓
+
+    FINAL TABLE:
+              floors →  0   1   2   3   4   5   6
+    1 egg (dp[1]):      [0] [1] [2] [3] [4] [5] [6]
+    2 eggs (dp[2]):     [0] [1] [2] [2] [3] [3] [3]
+
+    ANSWER: dp[2][6] = 3 trials
+
+    OPTIMAL STRATEGY (for 2 eggs, 6 floors):
+    ┌──────────────────────────────────────────────────────────────────┐
+    │  Trial 1: Drop from floor 3                                    │
+    │    If BREAKS → egg1 gone, search floors 1-2 with 1 egg         │
+    │              → at most 2 more trials (linear: floor 1, floor 2)│
+    │              → total: 1 + 2 = 3 trials                         │
+    │    If SURVIVES → 2 eggs left, search floors 4-6 (3 floors)     │
+    │              → dp[2][3] = 2 more trials                        │
+    │              → total: 1 + 2 = 3 trials                         │
+    │  Worst case: max(3, 3) = 3  ✓                                  │
+    └──────────────────────────────────────────────────────────────────┘
+
+    WHY min(max(break, survive)) — THE INTUITION:
+    ─ max() because we plan for the WORST case (we don't know the answer)
+    ─ min() because we pick the BEST strategy (optimal floor to drop from)
+
+
+================================================================================
 ================================================================================
     PROBLEM 6: BURST BALLOONS (LC 312 — Hard)
     (Google, Amazon, Goldman Sachs, Meta)
@@ -1499,6 +1874,90 @@ BURST BALLOONS — INTERVIEW TRICKS:
 
 
 ================================================================================
+▶▶▶  WALKTHROUGH — BURST BALLOONS STEP-BY-STEP  ◀◀◀
+================================================================================
+
+    EXAMPLE: nums = [3, 1, 5]
+    Padded: [1, 3, 1, 5, 1]   (add 1 at both ends)
+    Indices: 0  1  2  3  4
+    Goal: Burst all balloons (indices 1-3) to MAXIMIZE coins.
+    Call: solve(1, 3)
+
+    KEY INSIGHT — "LAST TO BURST" THINKING:
+    ┌──────────────────────────────────────────────────────────────────┐
+    │  If we think "burst first" → neighbors change unpredictably.   │
+    │  If we think "burst LAST" → when balloon k is the last one     │
+    │  in range [i,j], everything else is already gone!              │
+    │  So its neighbors are the BOUNDARIES: nums[i-1] and nums[j+1] │
+    └──────────────────────────────────────────────────────────────────┘
+
+    RECURSION TREE:
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                    solve(1, 3)                                  │
+    │              ┌────────┼────────┐                                │
+    │            k=1       k=2      k=3                               │
+    │          (3 last)  (1 last)  (5 last)                          │
+    └──────────────────────────────────────────────────────────────────┘
+
+    STEP 1 — k=1: Balloon 3 is LAST to burst in [1,3]
+    ─────────────────────────────────────────────────
+        left  = solve(1, 0) = 0               ← empty range
+        right = solve(2, 3)                   ← burst balloons 1,5 first
+        cost of bursting 3 LAST: nums[0]*nums[1]*nums[4] = 1*3*1 = 3
+
+        ► solve(2, 3):  balloons with values [1, 5]
+          k=2 (1 is last): solve(2,1)=0, solve(3,3), cost=nums[1]*nums[2]*nums[4]=3*1*1=3
+            solve(3,3): k=3: cost=nums[2]*nums[3]*nums[4]=1*5*1=5, return 5
+            total = 0 + 5 + 3 = 8
+          k=3 (5 is last): solve(2,2), solve(4,3)=0, cost=nums[1]*nums[3]*nums[4]=3*5*1=15
+            solve(2,2): k=2: cost=nums[1]*nums[2]*nums[3]=3*1*5=15, return 15
+            total = 15 + 0 + 15 = 30
+          solve(2,3) = max(8, 30) = 30
+
+        Total(k=1) = 0 + 30 + 3 = 33
+
+    STEP 2 — k=2: Balloon 1 is LAST to burst in [1,3]
+    ─────────────────────────────────────────────────
+        left  = solve(1, 1):  k=1: cost=nums[0]*nums[1]*nums[2]=1*3*1=3, return 3
+        right = solve(3, 3):  k=3: cost=nums[2]*nums[3]*nums[4]=1*5*1=5, return 5
+        cost of bursting 1 LAST: nums[0]*nums[2]*nums[4] = 1*1*1 = 1
+
+        Total(k=2) = 3 + 5 + 1 = 9
+
+    STEP 3 — k=3: Balloon 5 is LAST to burst in [1,3]
+    ─────────────────────────────────────────────────
+        left  = solve(1, 2)                   ← burst balloons 3,1 first
+        right = solve(4, 3) = 0               ← empty range
+        cost of bursting 5 LAST: nums[0]*nums[3]*nums[4] = 1*5*1 = 5
+
+        ► solve(1, 2):  balloons with values [3, 1]
+          k=1 (3 last): solve(1,0)=0, solve(2,2)=15, cost=nums[0]*nums[1]*nums[3]=1*3*5=15
+            total = 0 + 15 + 15 = 30
+          k=2 (1 last): solve(1,1)=3, solve(3,2)=0, cost=nums[0]*nums[2]*nums[3]=1*1*5=5
+            total = 3 + 0 + 5 = 8
+          solve(1,2) = max(30, 8) = 30
+
+        Total(k=3) = 30 + 0 + 5 = 35
+
+    STEP 4 — Pick maximum:
+    ─────────────────────
+        max(33, 9, 35) = 35  ✓
+        Best: Burst 5 LAST in the range.
+
+    WHAT DOES "35" MEAN PHYSICALLY?
+    ┌──────────────────────────────────────────────────────────────────┐
+    │  Optimal burst order: 1 first, then 3, then 5                  │
+    │                                                                 │
+    │  Burst 1 (val=1): neighbors are 3,5 → 3*1*5 = 15 coins        │
+    │  Burst 3 (val=3): neighbors are 1,5 → 1*3*5 = 15 coins        │
+    │       (boundary 1 is dummy, 5 is the remaining balloon)         │
+    │  Burst 5 (val=5): neighbors are 1,1 → 1*5*1 = 5 coins         │
+    │       (both neighbors are dummies)                              │
+    │  Total: 15 + 15 + 5 = 35  ✓                                    │
+    └──────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
 ================================================================================
     PROBLEM 7: MINIMUM COST TO MERGE STONES (LC 1000 — Hard)
     (Google, Amazon)
@@ -1624,6 +2083,86 @@ print(f"Memo K=3: {merge_stones_memo(stones, 3)}")   # 25
 
 """
 ================================================================================
+▶▶▶  WALKTHROUGH — MERGE STONES STEP-BY-STEP  ◀◀◀
+================================================================================
+
+    EXAMPLE: stones = [3, 2, 4, 1], K = 2
+    Goal: Merge consecutive K=2 piles at a time, minimize total cost.
+    Check: (n-1) % (K-1) = (4-1) % (2-1) = 3 % 1 = 0 → possible ✓
+
+    HOW MERGING WORKS:
+    ┌──────────────────────────────────────────────────────────────────┐
+    │  [3, 2, 4, 1]                                                   │
+    │   Merge any 2 consecutive piles → cost = sum of those piles    │
+    │   Repeat until 1 pile remains                                  │
+    └──────────────────────────────────────────────────────────────────┘
+
+    PREFIX SUMS: prefix = [0, 3, 5, 9, 10]
+    range_sum(i, j) = prefix[j+1] - prefix[i]
+    e.g. range_sum(1, 3) = prefix[4] - prefix[1] = 10 - 3 = 7
+
+    CALL: solve(0, 3)
+
+    STEP-BY-STEP DP TABLE (gap-based filling):
+    ─────────────────────────────────────────
+
+    Gap=0 (single piles): dp[i][i] = 0 for all i
+        dp[0][0]=0, dp[1][1]=0, dp[2][2]=0, dp[3][3]=0
+
+    Gap=1 (K=2, merge 2 piles — this is the minimum mergeable gap):
+        dp[0][1]: k=0: dp[0][0]+dp[1][1] = 0
+                  (1-0)%(K-1)=1%1=0 → can merge! add range_sum(0,1)=5
+                  dp[0][1] = 0 + 5 = 5
+                  Meaning: merge [3,2] → cost 5, result pile = [5]
+
+        dp[1][2]: k=1: dp[1][1]+dp[2][2] = 0
+                  (2-1)%1=0 → add range_sum(1,2)=6
+                  dp[1][2] = 0 + 6 = 6
+                  Meaning: merge [2,4] → cost 6, result pile = [6]
+
+        dp[2][3]: k=2: dp[2][2]+dp[3][3] = 0
+                  (3-2)%1=0 → add range_sum(2,3)=5
+                  dp[2][3] = 0 + 5 = 5
+                  Meaning: merge [4,1] → cost 5, result pile = [5]
+
+    Gap=2 (3 piles):
+        dp[0][2]: k=0: dp[0][0]+dp[1][2] = 0+6 = 6
+                  k=1: dp[0][1]+dp[2][2] = 5+0 = 5  ← better!
+                  (2-0)%1=0 → add range_sum(0,2)=9
+                  dp[0][2] = 5 + 9 = 14
+                  Meaning: merge [3,2]→5 first, then merge [5,4]→9, total=14
+
+        dp[1][3]: k=1: dp[1][1]+dp[2][3] = 0+5 = 5
+                  k=2: dp[1][2]+dp[3][3] = 6+0 = 6
+                  (3-1)%1=0 → add range_sum(1,3)=7
+                  dp[1][3] = 5 + 7 = 12
+                  Meaning: merge [4,1]→5 first, then merge [2,5]→7, total=12
+
+    Gap=3 (all 4 piles):
+        dp[0][3]: k=0: dp[0][0]+dp[1][3] = 0+12 = 12
+                  k=1: dp[0][1]+dp[2][3] = 5+5 = 10  ← better!
+                  k=2: dp[0][2]+dp[3][3] = 14+0 = 14
+                  (3-0)%1=0 → add range_sum(0,3)=10
+                  dp[0][3] = 10 + 10 = 20  ✓
+
+    ANSWER: dp[0][3] = 20
+
+    OPTIMAL MERGE SEQUENCE (for k=1 split):
+    ┌──────────────────────────────────────────────────────────────────┐
+    │  [3, 2, 4, 1]                                                   │
+    │  Step 1: merge [3,2] → [5, 4, 1]     cost = 5                  │
+    │  Step 2: merge [4,1] → [5, 5]         cost = 5                  │
+    │  Step 3: merge [5,5] → [10]           cost = 10                 │
+    │  Total: 5 + 5 + 10 = 20  ✓                                     │
+    └──────────────────────────────────────────────────────────────────┘
+
+    WHY K-1 STEP SIZE IN THE K-LOOP:
+    With K=3 (merge 3 at a time), each sub-partition must be reducible
+    to a single pile. That requires (size-1) % (K-1) == 0.
+    Stepping by K-1 ensures each partition boundary is valid.
+
+
+================================================================================
 ================================================================================
     PROBLEM 8: MINIMUM SCORE TRIANGULATION OF POLYGON (LC 1039 — Medium)
     (Google, Amazon)
@@ -1707,6 +2246,83 @@ print(f"Bottom-Up {values}: {min_score_triangulation_bottom_up(values)}")  # 13
 
 
 """
+================================================================================
+▶▶▶  WALKTHROUGH — POLYGON TRIANGULATION STEP-BY-STEP  ◀◀◀
+================================================================================
+
+    EXAMPLE: values = [3, 7, 4, 5]  (4-sided polygon, a quadrilateral)
+    Goal: Split polygon into triangles, minimize sum of (v[i]*v[k]*v[j])
+    Call: solve(0, 3)
+
+    VISUALIZING THE POLYGON:
+    ┌──────────────────────────────────────────────────────────────────┐
+    │        3 (vertex 0)                                             │
+    │       / \                                                       │
+    │      /   \                                                      │
+    │   5 /     \ 7                                                   │
+    │  (3)\     /(1)                                                  │
+    │      \   /                                                      │
+    │       \ /                                                       │
+    │        4 (vertex 2)                                             │
+    │                                                                 │
+    │  A quadrilateral needs exactly 2 triangles (n-2 = 4-2 = 2)     │
+    │  We draw ONE diagonal to split it into 2 triangles.            │
+    └──────────────────────────────────────────────────────────────────┘
+
+    CALL: solve(i=0, j=3)
+    The edge (0,3) is fixed. We pick a third vertex k between 0 and 3.
+
+    STEP 1 — k=1: Triangle is (0, 1, 3) = vertices 3, 7, 5
+    ─────────────────────────────────────────────────────────
+        Triangle cost = values[0]*values[1]*values[3] = 3*7*5 = 105
+        Remaining: solve(0,1) + solve(1,3)
+
+        solve(0, 1): j-i = 1 < 2 → return 0  (only an edge, no triangle)
+
+        ► solve(1, 3): edge (1,3) fixed, try k=2
+          k=2: Triangle (1,2,3) = 7*4*5 = 140
+               solve(1,2)=0, solve(2,3)=0
+          return 140
+
+        Total(k=1) = 105 + 0 + 140 = 245
+        Diagonal: (1,3). Triangles: (3,7,5) and (7,4,5)
+
+    STEP 2 — k=2: Triangle is (0, 2, 3) = vertices 3, 4, 5
+    ─────────────────────────────────────────────────────────
+        Triangle cost = values[0]*values[2]*values[3] = 3*4*5 = 60
+        Remaining: solve(0,2) + solve(2,3)
+
+        ► solve(0, 2): edge (0,2) fixed, try k=1
+          k=1: Triangle (0,1,2) = 3*7*4 = 84
+               solve(0,1)=0, solve(1,2)=0
+          return 84
+
+        solve(2, 3): j-i = 1 < 2 → return 0
+
+        Total(k=2) = 60 + 84 + 0 = 144
+        Diagonal: (0,2). Triangles: (3,4,5) and (3,7,4)
+
+    STEP 3 — Pick minimum:
+    ─────────────────────
+        min(245, 144) = 144  ✓
+        Best diagonal: (0,2), creating triangles (3,4,5) and (3,7,4)
+
+    WHY THIS IS LITERALLY MCM:
+    ┌──────────────────────────────────────────────────────────────────┐
+    │  MCM:      cost = arr[i-1] * arr[k] * arr[j]                   │
+    │  Polygon:  cost = values[i] * values[k] * values[j]            │
+    │                                                                 │
+    │  MCM:      solve(i, k) + solve(k+1, j) + merge_cost            │
+    │  Polygon:  solve(i, k) + solve(k, j)   + triangle_cost         │
+    │            ↑ note: k, not k+1! (vertex k is shared by both     │
+    │              sub-polygons, it's not "consumed")                 │
+    └──────────────────────────────────────────────────────────────────┘
+
+    SIMPLER EXAMPLE: values = [1, 2, 3]  (triangle)
+    solve(0, 2): k=1: cost = 1*2*3 = 6, solve(0,1)=0, solve(1,2)=0
+    Answer: 6  (only one possible triangle, no choice to make)
+
+
 ================================================================================
 ================================================================================
                     MASTER COMPARISON TABLE — ALL MCM PROBLEMS
