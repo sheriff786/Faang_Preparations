@@ -1,0 +1,247 @@
+---
+references:
+  - "File: /LeetCodeProblems/Dynamic
+    programming(DP)/DP-Phase1/Matrix_Chain_Multiplication(MCM).py"
+  - "File: /LeetCodeProblems/Dynamic
+    programming(DP)/DP-Phase1/Unbounded_Knapsack_FAANG_Tricks.py"
+  - "File: /LeetCodeProblems/Dynamic
+    programming(DP)/DP-Phase1/longest_common_subsequence.py"
+  - "File: /LeetCodeProblems/Dynamic
+    programming(DP)/DP_Phase2/DP_Practice_Problems_FAANG.py"
+generationTime: 2026-08-23T07:06:03.534Z
+---
+classDiagram
+    direction TB
+
+    class MCM_Pattern {
+        <<abstract>>
+        +solve(arr, i, j) int
+        +base_case() int
+        +k_loop() void
+        +merge_cost() int
+    }
+
+    class MatrixChainMultiplication {
+        +mcm_recursion(arr, i, j) int
+        +mcm_memo(arr, i, j, memo) int
+        +mcm_bottom_up(arr) int
+        +mcm_print_parenthesization(arr) tuple
+    }
+
+    class PalindromePartitioning {
+        +is_palindrome(s, i, j) bool
+        +palindrome_partition_recursion(s, i, j) int
+        +palindrome_partition_memo(s, i, j, memo) int
+        +palindrome_partition_bottom_up(s) int
+    }
+
+    class BooleanParenthesization {
+        +boolean_parenthesization_recursion(expr, i, j, is_true) int
+        +boolean_parenthesization_memo(expr, i, j, is_true, memo) int
+        +boolean_parenthesization_bottom_up(expr) int
+    }
+
+    class ScrambleString {
+        +scramble_string_recursion(s1, s2) bool
+        +scramble_string_memo(s1, s2, memo) bool
+        +scramble_string_bottom_up(s1, s2) bool
+    }
+
+    class EggDropping {
+        +egg_drop_recursion(e, f) int
+        +egg_drop_memo(e, f, memo) int
+        +egg_drop_memo_binary(e, f, memo) int
+        +egg_drop_bottom_up(e, f) int
+        +egg_drop_optimal(e, f) int
+    }
+
+    class BurstBalloons {
+        +burst_balloons_recursion(nums) int
+        +burst_balloons_memo(nums) int
+        +burst_balloons_bottom_up(nums) int
+    }
+
+    class MergeStones {
+        +merge_stones(stones, K) int
+        +merge_stones_memo(stones, K) int
+    }
+
+    class PolygonTriangulation {
+        +min_score_triangulation_memo(values) int
+        +min_score_triangulation_bottom_up(values) int
+    }
+
+    class LCS_Pattern {
+        <<abstract>>
+        +compare(X, Y, i, j) int
+        +on_match() int
+        +on_mismatch() int
+    }
+
+    class LCS {
+        +lcs_recursion(X, Y) int
+        +lcs_memo(X, Y) int
+        +lcs_bottomup(X, Y) int
+    }
+
+    class LongestCommonSubstring {
+        +lcsubstr_bottomup(X, Y) int
+    }
+
+    class PrintLCS {
+        +print_lcs(X, Y) String
+    }
+
+    class ShortestCommonSupersequence {
+        +scs_length(X, Y) int
+        +print_scs(X, Y) String
+    }
+
+    class MinInsertDelete {
+        +min_insert_delete(A, B) tuple
+    }
+
+    class LongestRepeatingSubseq {
+        +longest_repeating_subseq(s) int
+    }
+
+    class PalindromicSubsequence {
+        +lps_recursion(s) int
+        +lps_memo(s) int
+        +lps_bottomup(s) int
+        +min_del_palindrome(s) int
+        +min_ins_palindrome(s) int
+    }
+
+    class PalindromicSubstring {
+        +longest_palindrome_substring(s) String
+        +count_palindrome_substrings(s) int
+    }
+
+    class EditDistance {
+        +edit_distance_recursion(w1, w2, m, n) int
+        +edit_distance_memo(w1, w2, m, n, dp) int
+        +edit_distance_bottom_up(w1, w2) int
+        +edit_distance_space_optimized(w1, w2) int
+    }
+
+    class InterleavingStrings {
+        +interleave_recursion(s1, s2, s3, i, j, k) bool
+        +interleave_memo(s1, s2, s3, i, j, memo) bool
+        +interleave_bottom_up(s1, s2, s3) bool
+    }
+
+    class UnboundedKnapsack {
+        <<abstract>>
+        +items list
+        +capacity int
+        +solve_1d(items, target) int
+    }
+
+    class RodCutting {
+        +rod_cutting_2d(price, n) int
+        +rod_cutting_1d(price, n) int
+    }
+
+    class CoinChangeWays {
+        +coin_change_ways_2d(coins, target) int
+        +coin_change_ways_1d(coins, target) int
+    }
+
+    class CoinChangeMin {
+        +coin_change_min_2d(coins, target) int
+        +coin_change_min_1d(coins, target) int
+    }
+
+    class IntegerBreak {
+        +integer_break_dp(n) int
+        +integer_break_math(n) int
+    }
+
+    class PerfectSquares {
+        +perfect_squares(n) int
+    }
+
+    class WordBreak {
+        +word_break(s, word_dict) bool
+        +word_break_count_bottom_up(s, word_dict) int
+    }
+
+    class StandaloneDP {
+        <<abstract>>
+    }
+
+    class CountWays {
+        +count_ways_recursion(n) int
+        +count_ways_memo(n, memo) int
+        +count_ways_bottom_up(n) int
+        +count_ways_optimized(n) int
+    }
+
+    class JumpGame {
+        +jump_game_recursion(nums, pos) bool
+        +jump_game_bottom_up(nums) bool
+        +jump_game_greedy(nums) bool
+    }
+
+    class HouseRobber {
+        +robbery_recursion(nums, i) int
+        +robbery_bottom_up(nums) int
+        +robbery_optimized(nums) int
+    }
+
+    class KnightDialer {
+        +KNIGHT_MOVES dict
+        +knight_dialer_recursion(n) int
+        +knight_dialer_memo(n) int
+        +knight_dialer_bottom_up(n) int
+    }
+
+    class LargestSquare {
+        +largest_square_bottom_up(matrix) int
+        +largest_square_space_optimized(matrix) int
+    }
+
+    class WordWrap {
+        +word_wrap_recursion(words, M) int
+        +word_wrap_memo(words, M) int
+        +word_wrap_bottom_up(words, M) int
+    }
+
+    MCM_Pattern <|-- MatrixChainMultiplication
+    MCM_Pattern <|-- PalindromePartitioning
+    MCM_Pattern <|-- BooleanParenthesization
+    MCM_Pattern <|-- ScrambleString
+    MCM_Pattern <|-- EggDropping
+    MCM_Pattern <|-- BurstBalloons
+    MCM_Pattern <|-- MergeStones
+    MCM_Pattern <|-- PolygonTriangulation
+
+    LCS_Pattern <|-- LCS
+    LCS_Pattern <|-- LongestCommonSubstring
+    LCS_Pattern <|-- PrintLCS
+    LCS_Pattern <|-- ShortestCommonSupersequence
+    LCS_Pattern <|-- MinInsertDelete
+    LCS_Pattern <|-- LongestRepeatingSubseq
+    LCS_Pattern <|-- PalindromicSubsequence
+    LCS_Pattern <|-- PalindromicSubstring
+    LCS_Pattern <|-- EditDistance
+    LCS_Pattern <|-- InterleavingStrings
+
+    UnboundedKnapsack <|-- RodCutting
+    UnboundedKnapsack <|-- CoinChangeWays
+    UnboundedKnapsack <|-- CoinChangeMin
+    UnboundedKnapsack <|-- IntegerBreak
+    UnboundedKnapsack <|-- PerfectSquares
+    UnboundedKnapsack <|-- WordBreak
+
+    StandaloneDP <|-- CountWays
+    StandaloneDP <|-- JumpGame
+    StandaloneDP <|-- HouseRobber
+    StandaloneDP <|-- KnightDialer
+    StandaloneDP <|-- LargestSquare
+    StandaloneDP <|-- WordWrap
+
+    LCS ..> PalindromicSubsequence : used by
+    LCS ..> ShortestCommonSupersequence : used by
+    LCS ..> MinInsertDelete : used by
