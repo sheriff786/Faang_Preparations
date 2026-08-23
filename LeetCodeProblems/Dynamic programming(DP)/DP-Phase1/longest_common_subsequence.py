@@ -1993,3 +1993,489 @@ def count_palindrome_substrings(s):
 if __name__ == "__main__":
     print("\n=== COUNT PALINDROMIC SUBSTRINGS ===")
     print("Count:", count_palindrome_substrings("aaa"))
+
+
+'''
+================================================================================
+================================================================================
+    PROBLEM 15: LEVENSHTEIN DISTANCE / EDIT DISTANCE (LC 72 — Hard)
+    (Google, Amazon, Microsoft, Meta, Apple — VERY FREQUENT)
+================================================================================
+================================================================================
+
+PROBLEM IN 10 SECONDS:
+    Given two strings word1 and word2, find the minimum number of operations
+    to convert word1 into word2. Allowed operations:
+        1. INSERT a character
+        2. DELETE a character
+        3. REPLACE a character
+
+    Example:
+    Input: word1 = "horse", word2 = "ros"
+    Output: 3
+    Explanation: horse → rorse (replace h→r) → rose (delete r) → ros (delete e)
+
+WHY IS THIS AN LCS VARIANT?
+    Edit Distance is the INVERSE of LCS — instead of "what's common,"
+    we ask "what must change."
+    
+    RELATIONSHIP: edit_distance ≥ max(m, n) - LCS(word1, word2)
+    But Edit Distance also allows REPLACE (which LCS doesn't model directly),
+    so it needs its own DP formulation.
+
+IDENTIFICATION TRICK:
+    "convert string A to B" + "insert/delete/replace" → Edit Distance
+    "minimum operations" + "two strings" → Edit Distance
+    "spell check", "autocorrect", "string similarity" → Edit Distance
+
+================================================================================
+THE CHOICE DIAGRAM:
+================================================================================
+
+    Compare word1[i-1] vs word2[j-1]:
+
+                  word1[i-1] vs word2[j-1]
+                       /           \\
+                      /             \\
+              MATCH!                NO MATCH
+              (free!)           pick MIN of 3 operations:
+                |                 /       |       \\
+                |                /        |        \\
+         dp[i-1][j-1]     INSERT     DELETE    REPLACE
+         (0 cost,         dp[i][j-1]  dp[i-1][j]  dp[i-1][j-1]
+          both advance)      +1          +1          +1
+
+    MATCH:     dp[i][j] = dp[i-1][j-1]  (no operation needed)
+    NO MATCH:  dp[i][j] = 1 + min(dp[i][j-1],      ← INSERT into word1
+                                   dp[i-1][j],      ← DELETE from word1
+                                   dp[i-1][j-1])    ← REPLACE in word1
+
+MEMORY TRICK FOR THE 3 OPERATIONS:
+    dp[i][j-1]   = INSERT  → "I added a char to word1, now match word2[j-1]"
+                              word1 stays at i, word2 moves back to j-1
+    dp[i-1][j]   = DELETE  → "I deleted word1[i-1], try next char"
+                              word1 moves back to i-1, word2 stays at j
+    dp[i-1][j-1] = REPLACE → "I replaced word1[i-1] with word2[j-1]"
+                              both move back
+
+BASE CASES:
+    dp[i][0] = i  (delete all i chars from word1 to get empty string)
+    dp[0][j] = j  (insert all j chars to build word2 from empty string)
+
+COMPARISON WITH LCS:
+    ┌─────────────────────┬────────────────────┬──────────────────────┐
+    │                     │ LCS                 │ Edit Distance        │
+    ├─────────────────────┼────────────────────┼──────────────────────┤
+    │ On match            │ 1 + dp[i-1][j-1]   │ dp[i-1][j-1] (free)  │
+    │ On mismatch         │ max(up, left)       │ 1 + min(up,left,diag)│
+    │ Base case           │ dp[i][0]=dp[0][j]=0 │ dp[i][0]=i, dp[0][j]=j│
+    │ Optimize            │ MAXIMIZE             │ MINIMIZE             │
+    └─────────────────────┴────────────────────┴──────────────────────┘
+
+================================================================================
+APPROACH 1: RECURSION
+================================================================================
+'''
+
+
+def edit_distance_recursion(word1, word2, m, n):
+    """
+    Edit Distance — Pure Recursion
+    Time: O(3^(m+n)) — exponential
+    Space: O(m+n) — recursion stack
+    """
+    if m == 0:
+        return n  # insert n chars
+    if n == 0:
+        return m  # delete m chars
+    
+    if word1[m - 1] == word2[n - 1]:
+        return edit_distance_recursion(word1, word2, m - 1, n - 1)
+    else:
+        insert = edit_distance_recursion(word1, word2, m, n - 1)
+        delete = edit_distance_recursion(word1, word2, m - 1, n)
+        replace = edit_distance_recursion(word1, word2, m - 1, n - 1)
+        return 1 + min(insert, delete, replace)
+
+
+'''
+================================================================================
+APPROACH 2: MEMOIZATION (Top-Down)
+================================================================================
+
+    WHAT CHANGES? → m and n (lengths of remaining substrings)
+    Memo: dp[m+1][n+1] initialized to -1
+'''
+
+
+def edit_distance_memo(word1, word2, m, n, dp):
+    """
+    Edit Distance with Memoization
+    Time: O(m*n), Space: O(m*n)
+    """
+    if m == 0:
+        return n
+    if n == 0:
+        return m
+    
+    if dp[m][n] != -1:
+        return dp[m][n]
+    
+    if word1[m - 1] == word2[n - 1]:
+        dp[m][n] = edit_distance_memo(word1, word2, m - 1, n - 1, dp)
+    else:
+        insert = edit_distance_memo(word1, word2, m, n - 1, dp)
+        delete = edit_distance_memo(word1, word2, m - 1, n, dp)
+        replace = edit_distance_memo(word1, word2, m - 1, n - 1, dp)
+        dp[m][n] = 1 + min(insert, delete, replace)
+    
+    return dp[m][n]
+
+
+'''
+================================================================================
+APPROACH 3: BOTTOM-UP (Tabulation)
+================================================================================
+
+    dp[i][j] = min operations to convert word1[0..i-1] to word2[0..j-1]
+================================================================================
+DP TABLE TRACE for word1 = "horse", word2 = "ros":
+================================================================================
+
+         ""   r   o   s
+    ""  [ 0   1   2   3 ]  ← insert j chars
+    h   [ 1   1   2   3 ]
+    o   [ 2   2   1   2 ]
+    r   [ 3   2   2   2 ]
+    s   [ 4   3   3   2 ]
+    e   [ 5   4   4   3 ]
+
+    Answer: dp[5][3] = 3
+
+    HOW TO READ:
+    dp[1][1]=1: "h"→"r" = 1 replace
+    dp[2][2]=1: "ho"→"ro" = 1 replace (h→r, o matches)
+    dp[5][3]=3: "horse"→"ros" = 3 operations
+'''
+
+
+def edit_distance_bottom_up(word1, word2):
+    """
+    Edit Distance — Bottom-Up DP
+    Time: O(m*n), Space: O(m*n)
+    INTERVIEW PREFERRED
+    """
+    m, n = len(word1), len(word2)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+    
+    # Base cases
+    for i in range(m + 1):
+        dp[i][0] = i  # delete i chars
+    for j in range(n + 1):
+        dp[0][j] = j  # insert j chars
+    
+    # Fill table
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if word1[i - 1] == word2[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1]  # match: free
+            else:
+                dp[i][j] = 1 + min(dp[i][j - 1],      # insert
+                                   dp[i - 1][j],      # delete
+                                   dp[i - 1][j - 1])  # replace
+    
+    return dp[m][n]
+
+
+def edit_distance_space_optimized(word1, word2):
+    """
+    Edit Distance — Space Optimized O(n)
+    Only need previous row + current row
+    """
+    m, n = len(word1), len(word2)
+    prev = list(range(n + 1))
+    
+    for i in range(1, m + 1):
+        curr = [i] + [0] * n
+        for j in range(1, n + 1):
+            if word1[i - 1] == word2[j - 1]:
+                curr[j] = prev[j - 1]
+            else:
+                curr[j] = 1 + min(curr[j - 1], prev[j], prev[j - 1])
+        prev = curr
+    
+    return prev[n]
+
+
+if __name__ == "__main__":
+    print("\n=== LEVENSHTEIN DISTANCE (EDIT DISTANCE) ===")
+    w1, w2 = "horse", "ros"
+    print(f"Recursion ('{w1}','{w2}'): {edit_distance_recursion(w1, w2, len(w1), len(w2))}")
+    dp = [[-1] * (len(w2) + 1) for _ in range(len(w1) + 1)]
+    print(f"Memo ('{w1}','{w2}'): {edit_distance_memo(w1, w2, len(w1), len(w2), dp)}")
+    print(f"Bottom-Up ('{w1}','{w2}'): {edit_distance_bottom_up(w1, w2)}")
+    print(f"Space-Opt ('{w1}','{w2}'): {edit_distance_space_optimized(w1, w2)}")
+    w1, w2 = "intention", "execution"
+    print(f"Bottom-Up ('{w1}','{w2}'): {edit_distance_bottom_up(w1, w2)}")  # 5
+
+
+'''
+================================================================================
+EDIT DISTANCE — INTERVIEW TRICKS:
+================================================================================
+
+    TRICK 1: Base case is NOT 0! dp[i][0]=i, dp[0][j]=j
+             (converting to/from empty string costs i or j operations)
+    
+    TRICK 2: Match = FREE (dp[i-1][j-1], no +1)
+             Mismatch = 1 + min(3 choices)
+    
+    TRICK 3: Space optimize: only need 2 rows (previous + current)
+    
+    TRICK 4: To PRINT the operations, backtrack through dp table:
+             - Came from diagonal (same val) → match, no op
+             - Came from diagonal + 1 → replace
+             - Came from left + 1 → insert
+             - Came from above + 1 → delete
+
+    TRICK 5: If only INSERT and DELETE allowed (no REPLACE):
+             edit_distance = m + n - 2 * LCS(word1, word2)
+             (This reduces to the min-insertions-deletions problem!)
+
+    COMPANIES: Google, Amazon, Microsoft, Meta, Apple, Goldman Sachs
+================================================================================
+'''
+
+
+'''
+================================================================================
+================================================================================
+    PROBLEM 16: INTERLEAVING STRINGS (LC 97 — Medium)
+    (Google, Amazon, Microsoft, Meta)
+================================================================================
+================================================================================
+
+PROBLEM IN 10 SECONDS:
+    Given strings s1, s2, s3, determine if s3 is formed by interleaving s1 & s2.
+    
+    Interleaving = merge s1 and s2 character by character, maintaining relative
+    order of each string.
+
+    Example:
+    s1 = "aabcc", s2 = "dbbca", s3 = "aadbbcbcac"  → True
+    s1 = "aabcc", s2 = "dbbca", s3 = "aadbbbaccc"  → False
+
+WHY IS THIS AN LCS VARIANT?
+    Like LCS, we compare characters from TWO strings.
+    But instead of finding what's common, we check if both strings
+    can MERGE to form the third string.
+
+IDENTIFICATION TRICK:
+    "interleave two strings" + "maintain relative order" → 2-string DP
+    "form string s3 from s1 and s2" → Interleaving Strings
+
+KEY INSIGHT:
+    dp[i][j] = can s1[0..i-1] and s2[0..j-1] interleave to form s3[0..i+j-1]?
+    
+    At each position in s3, the character must come from either s1 or s2.
+    If s3[i+j-1] == s1[i-1] → it came from s1 → check dp[i-1][j]
+    If s3[i+j-1] == s2[j-1] → it came from s2 → check dp[i][j-1]
+
+BASE CASES:
+    dp[0][0] = True (both empty → s3 empty)
+    dp[i][0] = dp[i-1][0] AND s1[i-1] == s3[i-1]  (only using s1)
+    dp[0][j] = dp[0][j-1] AND s2[j-1] == s3[j-1]  (only using s2)
+
+QUICK CHECK: if len(s1) + len(s2) != len(s3) → False immediately
+
+================================================================================
+APPROACH 1: RECURSION
+================================================================================
+'''
+
+
+def interleave_recursion(s1, s2, s3, i, j, k):
+    """
+    Interleaving Strings — Pure Recursion
+    Time: O(2^(m+n)) — exponential
+    """
+    if i == len(s1) and j == len(s2) and k == len(s3):
+        return True
+    if k == len(s3):
+        return False
+    
+    take_s1 = (i < len(s1) and s1[i] == s3[k] and 
+               interleave_recursion(s1, s2, s3, i + 1, j, k + 1))
+    take_s2 = (j < len(s2) and s2[j] == s3[k] and 
+               interleave_recursion(s1, s2, s3, i, j + 1, k + 1))
+    
+    return take_s1 or take_s2
+
+
+'''
+================================================================================
+APPROACH 2: MEMOIZATION (Top-Down)
+================================================================================
+
+    WHAT CHANGES? → i and j (k = i + j, so only 2 variables needed!)
+'''
+
+
+def interleave_memo(s1, s2, s3, i, j, memo):
+    """
+    Interleaving Strings with Memoization
+    Time: O(m*n), Space: O(m*n)
+    """
+    if i == len(s1) and j == len(s2):
+        return True
+    
+    if (i, j) in memo:
+        return memo[(i, j)]
+    
+    k = i + j  # position in s3
+    
+    take_s1 = (i < len(s1) and s1[i] == s3[k] and 
+               interleave_memo(s1, s2, s3, i + 1, j, memo))
+    take_s2 = (j < len(s2) and s2[j] == s3[k] and 
+               interleave_memo(s1, s2, s3, i, j + 1, memo))
+    
+    memo[(i, j)] = take_s1 or take_s2
+    return memo[(i, j)]
+
+
+'''
+================================================================================
+APPROACH 3: BOTTOM-UP (Tabulation)
+================================================================================
+
+    dp[i][j] = can s1[0..i-1] and s2[0..j-1] form s3[0..i+j-1]?
+================================================================================
+DP TABLE TRACE for s1="aab", s2="axy", s3="aaxaby":
+================================================================================
+
+         ""    a    x    y
+    ""  [ T    T    T    F ]
+    a   [ T    T    T    T ]
+    a   [ T    T    F    T ]
+    b   [ F    F    F    T ]
+
+    Answer: dp[3][3] = True ✓
+    s3 = "aaxaby" is interleaving of "aab" and "axy"
+'''
+
+
+def interleave_bottom_up(s1, s2, s3):
+    """
+    Interleaving Strings — Bottom-Up DP
+    Time: O(m*n), Space: O(m*n)
+    INTERVIEW PREFERRED
+    """
+    m, n = len(s1), len(s2)
+    if m + n != len(s3):
+        return False
+    
+    dp = [[False] * (n + 1) for _ in range(m + 1)]
+    
+    dp[0][0] = True
+    
+    # First column: only s1
+    for i in range(1, m + 1):
+        dp[i][0] = dp[i - 1][0] and s1[i - 1] == s3[i - 1]
+    
+    # First row: only s2
+    for j in range(1, n + 1):
+        dp[0][j] = dp[0][j - 1] and s2[j - 1] == s3[j - 1]
+    
+    # Fill rest
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            k = i + j - 1  # position in s3
+            dp[i][j] = ((dp[i - 1][j] and s1[i - 1] == s3[k]) or
+                        (dp[i][j - 1] and s2[j - 1] == s3[k]))
+    
+    return dp[m][n]
+
+
+def interleave_space_optimized(s1, s2, s3):
+    """
+    Space Optimized — O(n) space
+    """
+    m, n = len(s1), len(s2)
+    if m + n != len(s3):
+        return False
+    
+    dp = [False] * (n + 1)
+    
+    for i in range(m + 1):
+        for j in range(n + 1):
+            k = i + j - 1
+            if i == 0 and j == 0:
+                dp[j] = True
+            elif i == 0:
+                dp[j] = dp[j - 1] and s2[j - 1] == s3[k]
+            elif j == 0:
+                dp[j] = dp[j] and s1[i - 1] == s3[k]
+            else:
+                dp[j] = ((dp[j] and s1[i - 1] == s3[k]) or
+                         (dp[j - 1] and s2[j - 1] == s3[k]))
+    
+    return dp[n]
+
+
+if __name__ == "__main__":
+    print("\n=== INTERLEAVING STRINGS ===")
+    s1, s2, s3 = "aabcc", "dbbca", "aadbbcbcac"
+    print(f"Recursion: {interleave_recursion(s1, s2, s3, 0, 0, 0)}")  # True
+    print(f"Memo: {interleave_memo(s1, s2, s3, 0, 0, {})}")  # True
+    print(f"Bottom-Up: {interleave_bottom_up(s1, s2, s3)}")  # True
+    print(f"Space-Opt: {interleave_space_optimized(s1, s2, s3)}")  # True
+    s3 = "aadbbbaccc"
+    print(f"Bottom-Up (False case): {interleave_bottom_up(s1, s2, s3)}")  # False
+
+
+'''
+================================================================================
+INTERLEAVING STRINGS — INTERVIEW TRICKS:
+================================================================================
+
+    TRICK 1: k = i + j, so you DON'T need a 3rd variable!
+             dp is 2D (m×n), not 3D.
+    
+    TRICK 2: Quick reject: if len(s1) + len(s2) != len(s3) → False
+    
+    TRICK 3: dp[i][j] is OR of two choices:
+             - s3[k] came from s1 → check dp[i-1][j] AND s1[i-1]==s3[k]
+             - s3[k] came from s2 → check dp[i][j-1] AND s2[j-1]==s3[k]
+    
+    TRICK 4: Space optimize to O(min(m,n)) — only need 1 row
+
+    COMPANIES: Google, Amazon, Microsoft, Meta, Uber
+================================================================================
+
+================================================================================
+UPDATED CONVERSION TABLE — LCS FAMILY (now 16 problems):
+================================================================================
+
+    ┌──────────────────────────────────┬──────────────────────────────────────┐
+    │ Problem                          │ Formula / Approach                   │
+    ├──────────────────────────────────┼──────────────────────────────────────┤
+    │ 1. LCS length                    │ dp[m][n]                             │
+    │ 2. Longest Common Substring      │ max of dp[i][j] (reset on mismatch) │
+    │ 3. Print LCS                     │ backtrack through dp table           │
+    │ 4. SCS length                    │ m + n - LCS(X, Y)                   │
+    │ 5. Print SCS                     │ backtrack, add non-LCS chars too    │
+    │ 6. Min Insert + Delete           │ (m - LCS) + (n - LCS)               │
+    │ 7. Longest Repeating Subseq      │ LCS(s, s) with i != j               │
+    │ 8. Is A subsequence of B?        │ LCS(A, B) == len(A)                 │
+    │ 9. Count subsequences            │ dp + on match, carry on mismatch   │
+    │ 10. Longest Palindromic Subseq   │ LCS(s, reverse(s))                  │
+    │ 11. Min deletions palindrome     │ n - LCS(s, reverse(s))              │
+    │ 12. Min insertions palindrome    │ n - LCS(s, reverse(s))              │
+    │ 13. Longest Palindromic Substr   │ expand around center O(n²)          │
+    │ 14. Count Palindromic Substrs    │ expand around center O(n²)          │
+    │ 15. Levenshtein/Edit Distance    │ 1 + min(insert, delete, replace)    │
+    │ 16. Interleaving Strings         │ dp[i][j] = OR(from s1, from s2)     │
+    └──────────────────────────────────┴──────────────────────────────────────┘
+
+================================================================================
+'''

@@ -615,6 +615,119 @@ print(f"'catsandog': {word_break('catsandog', ['cats', 'dog', 'sand', 'and', 'ca
 """
 ================================================================================
 ================================================================================
+    PROBLEM 9: WORD BREAK COUNT — Count # of Ways to Segment
+    (Google, Amazon, Microsoft, Meta — VERY FREQUENT)
+================================================================================
+================================================================================
+
+    Given string s and dictionary of words, count the NUMBER OF WAYS
+    s can be segmented into dictionary words.
+
+    Example: s = "abcd", dict = ["a", "abc", "b", "cd", "c", "d"]
+    Answer: 4 ways:
+        "a|b|c|d", "a|b|cd", "a|bcd"... actually:
+        "a|b|c|d", "a|b|cd", "abc|d", "a|bc|d"? depends on dict.
+    
+    This is Word Break BOOL extended to COUNTING.
+
+    WHY IS THIS UNBOUNDED KNAPSACK?
+    ─────────────────────────────────
+    - Items = words in dictionary (can reuse = unbounded!)
+    - Capacity = length of string s
+    - Goal = COUNT of ways (like Coin Change Count!)
+    
+    TRICK: "Same as Word Break bool, but instead of True/break,
+            we ADD up all ways: dp[i] += dp[j] when s[j:i] is in dict"
+
+    KEY CHANGE FROM BOOL VERSION:
+        Bool:  dp[i] = True (and break)
+        Count: dp[i] += dp[j] (accumulate all valid splits)
+"""
+
+
+# ═══════════════════════════════════════════════════════════════════
+# WORD BREAK COUNT — Interview Ready Code
+# ═══════════════════════════════════════════════════════════════════
+
+def word_break_count_recursion(s, word_dict, start):
+    """
+    Word Break Count — Pure Recursion
+    Time: O(2^n) — exponential
+    """
+    if start == len(s):
+        return 1  # found one valid segmentation
+    
+    count = 0
+    for end in range(start + 1, len(s) + 1):
+        if s[start:end] in word_dict:
+            count += word_break_count_recursion(s, word_dict, end)
+    
+    return count
+
+
+def word_break_count_memo(s, word_dict, start, memo):
+    """
+    Word Break Count — Memoization
+    Time: O(n^2 * k), Space: O(n) where k = avg word length
+    """
+    if start == len(s):
+        return 1
+    
+    if start in memo:
+        return memo[start]
+    
+    count = 0
+    for end in range(start + 1, len(s) + 1):
+        if s[start:end] in word_dict:
+            count += word_break_count_memo(s, word_dict, end, memo)
+    
+    memo[start] = count
+    return count
+
+
+def word_break_count_bottom_up(s, word_dict):
+    """
+    Word Break Count — Bottom-Up DP
+    Time: O(n^2 * k), Space: O(n)
+    INTERVIEW PREFERRED
+    
+    dp[i] = number of ways to segment s[0:i]
+    """
+    n = len(s)
+    word_set = set(word_dict)
+    dp = [0] * (n + 1)
+    dp[0] = 1  # empty string = 1 way
+
+    for i in range(1, n + 1):
+        for j in range(i):
+            if s[j:i] in word_set:
+                dp[i] += dp[j]
+
+    return dp[n]
+
+
+# Test
+print("\n=== WORD BREAK COUNT ===")
+s = "abcd"
+word_dict = ["a", "abc", "b", "cd", "c", "d"]
+word_set = set(word_dict)
+print(f"Recursion '{s}': {word_break_count_recursion(s, word_set, 0)}")
+print(f"Memo '{s}': {word_break_count_memo(s, word_set, 0, {})}")
+print(f"Bottom-Up '{s}': {word_break_count_bottom_up(s, word_dict)}")
+
+s = "leetcode"
+word_dict = ["leet", "code"]
+word_set = set(word_dict)
+print(f"Bottom-Up '{s}': {word_break_count_bottom_up(s, word_dict)}")  # 1
+
+s = "catsanddog"
+word_dict = ["cat", "cats", "and", "sand", "dog"]
+print(f"Bottom-Up '{s}': {word_break_count_bottom_up(s, word_dict)}")  # 2
+
+
+"""
+================================================================================
+================================================================================
     QUICK REVISION CHEAT SHEET — THE "5-FINGER" TRICK
 ================================================================================
 ================================================================================
