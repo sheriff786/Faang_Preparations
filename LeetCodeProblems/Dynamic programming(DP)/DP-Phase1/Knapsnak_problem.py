@@ -3065,3 +3065,76 @@ def target_sum_direct_optimized(arr, target):
 print("  [1,1,1,1,1] target=3 Optimized:", target_sum_direct_optimized([1,1,1,1,1], 3))
 print("  [1,2,2,1] target=2 Optimized:", target_sum_direct_optimized([1,2,2,1], 2))
 print("  [1] target=1 Optimized:", target_sum_direct_optimized([1], 1))
+def equal_subset_sum_partition(s):
+    n = len(s)
+    total = sum(s)
+
+    # Total must be even
+    if total % 2 != 0:
+        return []
+
+    target = total // 2
+
+    memo = {}
+
+    def helper(i, target, picked):
+
+        # We have found a non-empty subset
+        # whose sum is target.
+        #
+        # Because i < n here, there are still
+        # elements remaining, so the other subset
+        # will also be non-empty.
+        if target == 0 and picked > 0:
+            return []
+
+        # No elements left
+        if i == n:
+            return None
+
+        key = (i, target, picked)
+
+        if key in memo:
+            return memo[key]
+
+        # -------------------------
+        # TAKE s[i]
+        # -------------------------
+        take = helper(
+            i + 1,
+            target - s[i],
+            picked + 1
+        )
+
+        if take is not None:
+            memo[key] = [i] + take
+            return memo[key]
+
+        # -------------------------
+        # DON'T TAKE s[i]
+        # -------------------------
+        not_take = helper(
+            i + 1,
+            target,
+            picked
+        )
+
+        if not_take is not None:
+            memo[key] = not_take
+            return memo[key]
+
+        memo[key] = None
+        return None
+
+    selected_indices = helper(0, target, 0)
+
+    if selected_indices is None:
+        return []
+
+    # Convert selected indices into 1/0
+    answer = [False] * n
+
+    for index in selected_indices:
+        answer[index] = True
+
+    return answer

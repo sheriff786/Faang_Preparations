@@ -1163,3 +1163,214 @@ QUICK REVISION — STANDALONE DP PATTERNS:
 
 ================================================================================
 """
+
+
+"word wrap"
+
+# def solve_balanced_line_breaks(words, limit):
+#     """
+#     Args:
+#      words(list_str)
+#      limit(int32)
+#     Returns:
+#      int64
+#     """
+#     # Write your code here.
+    
+#     memo={}
+#     def solve(i):
+
+#         # Base case:
+#         # All words have been placed
+#         if i == len(words):
+#             return 0
+#         if i in memo:
+#             return memo[i]
+#         min_cost = float("inf")
+
+#         line_length = 0
+
+#         # Try every possible ending word for the current line
+#         for j in range(i, len(words)):
+
+#             # Add word[j] to current line
+#             if j == i:
+#                 line_length += len(words[j])
+#             else:
+#                 line_length += 1 + len(words[j])
+
+#             # If line exceeds the limit,
+#             # we cannot add any more words
+#             if line_length > limit:
+#                 break
+
+#             # Last line has zero cost
+#             if j == len(words) - 1:
+#                 current_cost = 0
+
+#             else:
+#                 extra_spaces = limit - line_length
+#                 current_cost = extra_spaces ** 3
+
+#             # Solve remaining words
+#             remaining_cost = solve(j + 1)
+#             # memo[j]=solve(j+1)
+
+#             # Total cost
+#             total_cost = current_cost + remaining_cost
+
+#             # Keep minimum
+#             # Store answer for THIS state
+#             min_cost = min(min_cost, total_cost)
+#         memo[i] = min_cost
+
+#         return memo[i]
+
+#         # return min_cost
+            
+
+#     return solve(0)
+
+def solve_balanced_line_breaks(words, limit):
+
+    n = len(words)
+
+    # dp[i] = minimum cost for words from i to n-1
+    dp = [float("inf")] * (n + 1)
+
+    # Base case:
+    # No words remaining -> cost 0
+    dp[n] = 0
+
+    # Work backwards
+    for i in range(n - 1, -1, -1):
+
+        line_length = 0
+
+        # Try every possible ending word for current line
+        for j in range(i, n):
+
+            # Add word[j] to current line
+            if j == i:
+                line_length += len(words[j])
+            else:
+                line_length += 1 + len(words[j])
+
+            # Line is too long
+            if line_length > limit:
+                break
+
+            # Last line has cost 0
+            if j == n - 1:
+                current_cost = 0
+            else:
+                extra_spaces = limit - line_length
+                current_cost = extra_spaces ** 3
+
+            # Remaining words start at j + 1
+            total_cost = current_cost + dp[j + 1]
+
+            # Keep minimum
+            dp[i] = min(dp[i], total_cost)
+
+    return dp[0]
+    
+#     #memorization
+
+
+
+
+
+def largest_sub_square_matrix(n, m, mat):
+    """
+    Args:
+     n(int32)
+     m(int32)
+     mat(list_list_int32)
+    Returns:
+     int32
+    """
+    # Write your code here.
+
+    # def solve(row, col):
+
+    #     # Current cell is outside the matrix
+    #     if row < 0 or col < 0:
+    #         return 0
+
+    #     # Current cell is 0
+    #     if mat[row][col] == 0:
+    #         return 0
+
+    #     # First row or first column
+    #     if row == 0 or col == 0:
+    #         return 1
+
+    #     # Three neighboring directions
+    #     up = solve(row - 1, col)
+    #     left = solve(row, col - 1)
+    #     diagonal = solve(row - 1, col - 1)
+
+    #     # Current cell extends the smallest square
+    #     return min(up, left, diagonal) + 1
+
+    # # We need the largest square anywhere in the matrix
+    # answer = 0
+
+    # for row in range(n):
+    #     for col in range(m):
+
+    #         current = solve(row, col)
+
+    #         answer = max(answer, current)
+
+    # return answer
+
+    memo = {}
+
+    def solve_memo(row, col):
+
+        # Outside matrix
+        if row < 0 or col < 0:
+            return 0
+
+        # Current cell is 0
+        if mat[row][col] == 0:
+            return 0
+
+        # Already calculated?
+        if (row, col) in memo:
+            return memo[(row, col)]
+
+        # First row or first column
+        if row == 0 or col == 0:
+            memo[(row, col)] = 1
+            return 1
+
+        # Three neighboring states
+        up = solve_memo(row - 1, col)
+
+        left = solve_memo(row, col - 1)
+
+        diagonal = solve_memo(row - 1, col - 1)
+
+        # Current square size
+        result = min(up, left, diagonal) + 1
+
+        # Store result
+        memo[(row, col)] = result
+
+        return result
+
+    # Largest square anywhere
+    answer = 0
+
+    for row in range(n):
+        for col in range(m):
+
+            current = solve_memo(row, col)
+
+            answer = max(answer, current)
+
+    return answer
+
