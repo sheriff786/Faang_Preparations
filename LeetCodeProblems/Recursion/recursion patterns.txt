@@ -1,0 +1,14 @@
+                 RECURSION
+                     |
+        ┌────────────┼────────────┐
+        ↓            ↓            ↓
+    1 choice     2 choices    N choices
+        |            |            |
+      basic       include/      backtracking
+                   exclude
+                     |
+                  subsets
+                     |
+                permutations
+                     |
+              N-Queens/Sudoku

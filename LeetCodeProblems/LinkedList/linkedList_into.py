@@ -274,7 +274,7 @@ class LinkedList:
 		return old_to_new[head]
 
 	@staticmethod
-	def reverse_k_group(head, k):
+	def reverse_k_group(head, k): #very important
 		if k <= 0:
 			raise ValueError("k must be a positive integer")
 
@@ -319,6 +319,41 @@ class LinkedList:
 				heapq.heappush(heap, (smallest_node.next.data, list_index, smallest_node.next))
 
 		return dummy_node.next
+'''
+import heapq
+
+    heap = []
+
+    # Put the first node of every list into the heap
+    for list_index, head in enumerate(lists):
+        if head is not None:
+            heapq.heappush(heap, (head.value, list_index, head))
+
+    # Dummy node
+    dummy_node = LinkedListNode(0)
+    current_node = dummy_node
+
+    # Process smallest node
+    while heap:
+        _, list_index, smallest_node = heapq.heappop(heap)
+
+        current_node.next = smallest_node
+        current_node = current_node.next
+
+        # Add next node from the same list
+        if smallest_node.next is not None:
+            heapq.heappush(
+                heap,
+                (
+                    smallest_node.next.value,
+                    list_index,
+                    smallest_node.next
+                )
+            )
+
+    return dummy_node.next
+'''
+
 
 
 class DoublyNode:

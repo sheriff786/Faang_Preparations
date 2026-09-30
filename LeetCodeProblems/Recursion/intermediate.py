@@ -851,3 +851,167 @@ def permutation(nums):
 nums=[1,1,2]
 
 print(permutation(nums))
+
+'''
+Problem
+  
+Permute Array Of Integers Duplicates Allowed
+Given an array of numbers with possible duplicates, return all of its permutations in any order.
+
+Example
+{
+"arr": [1, 2, 2]
+}
+Output:
+
+[
+[1, 2, 2],
+[2, 1, 2],
+[2, 2, 1]
+]
+Notes
+Constraints:
+
+1 <= size of the input array <= 9
+0 <= any array element <= 9
+
+'''
+def permute(arr):
+    result = []
+
+    def backtrack(path, used):
+        if len(path) == len(arr):
+            result.append(path.copy())
+            return
+
+        seen = set()
+
+        for i in range(len(arr)):
+            if not used[i] and arr[i] not in seen:
+
+                seen.add(arr[i])
+
+                used[i] = True
+                path.append(arr[i])
+
+                backtrack(path, used)
+
+                path.pop()
+                used[i] = False
+
+    backtrack([], [False] * len(arr))
+
+    return result
+
+'''
+Subsets With Duplicate Characters
+Given a string that might contain duplicate characters, find all the possible distinct subsets of that string.
+
+Example One
+{
+"s": "aab"
+}
+Output:
+
+["", "a", "aa", "aab", "ab", "b"]
+Example Two
+{
+"s": "dc"
+}
+Output:
+
+["", "c", "cd", "d"]
+Notes
+All the subset strings should be individually sorted.
+The order of the output strings does not matter.
+Constraints:
+
+1 <= length of the string <= 15
+String consists of lowercase English letters
+
+
+'''
+def get_distinct_subsets(s):
+    """
+    Args:
+     s(str)
+    Returns:
+     list_str
+    """
+    # Write your code here.
+    # def subsets(s):
+    s = sorted(s)
+    result = []
+
+    def backtrack(i, path):
+        if i == len(s):
+            result.append("".join(path))
+            return
+
+        # INCLUDE
+        path.append(s[i])
+        backtrack(i + 1, path)
+        path.pop()
+
+        # EXCLUDE
+        while i + 1 < len(s) and s[i] == s[i + 1]:
+            i += 1
+
+        backtrack(i + 1, path)
+
+    backtrack(0, [])
+    return result
+
+'''
+Generate All Combinations With Sum Equal To Target
+Given an integer array, generate all the unique combinations of the array numbers that sum up to a given target value.
+
+Example One
+{
+"arr": [1, 2, 3],
+"target": 3
+}
+Output:
+
+[
+[3],
+[1, 2]
+]
+Example Two
+{
+"arr": [1, 1, 1, 1],
+"target": 2
+}
+Output:
+
+[
+[1, 1]
+]
+Notes
+Each number in the array can be used exactly once.
+All the returned combinations must be different. Two combinations are considered different if their sorted version is different.
+The order of combinations and the order of the numbers inside a combination does not matter.
+Constraints:
+
+1 <= size of the input array <= 25
+1 <= value in the array <= 100
+1 <= target value <= 2500
+.
+.
+.
+.
+.
+
+Autocomplete
+
+I/O
+    return result
+
+
+00:01:57
+Sa
+
+
+'''
+
+

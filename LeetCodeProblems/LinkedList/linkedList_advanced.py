@@ -123,7 +123,7 @@ class LinkedList:
 
         self.head = dummy_node.next
 
-    def rotate_right(self, k):
+    def rotate_right(self, k): #very important
         if self.head is None or self.head.next is None or k == 0:
             return
         if k < 0:
@@ -204,7 +204,47 @@ class LinkedList:
                 current_node.data = 0
                 return 1
         return 0
+    def add_one(self):
+        # 1. Reverse the list
+        prev = None
+        current = self.head
 
+        while current is not None:
+            next_node = current.next
+            current.next = prev
+            prev = current
+            current = next_node
+
+        self.head = prev
+
+        # 2. Add 1
+        current = self.head
+        carry = 1
+
+        while current is not None and carry:
+            total = current.data + carry
+
+            current.data = total % 10
+            carry = total // 10
+
+            if current.next is None and carry:
+                current.next = Node(0)
+
+            current = current.next
+
+        # 3. Reverse back
+        prev = None
+        current = self.head
+
+        while current is not None:
+            next_node = current.next
+            current.next = prev
+            prev = current
+            current = next_node
+
+        self.head = prev
+
+        return self.head
 
 class MultilevelDoublyList:
     @staticmethod
@@ -434,7 +474,7 @@ if __name__ == "__main__":
     sublist = LinkedList()
     for value in [1, 2, 3, 4, 5]:
         sublist.insert(value)
-    sublist.reverse_sublist(2, 4)
+    sublist.reverse_sublist(2, 4) #very important
     assert sublist.values() == [1, 4, 3, 2, 5]
 
     pairs = LinkedList()

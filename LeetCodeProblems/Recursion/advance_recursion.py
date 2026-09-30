@@ -122,3 +122,124 @@ class Solution:
         backtrack(0)
 
         return res
+    
+'''
+Sudoku
+
+Problem
+  
+Sudoku Solver
+Given a partially filled two-dimensional array, fill all the unfilled cells such that each row, each column and each 3 x 3 subgrid (as highlighted below by bolder lines) has every digit from 1 to 9 exactly once.
+
+Unfilled cells have a value of 0 on the given board.
+
+Example
+Example one
+
+{
+"board": [
+[8, 4, 9, 0, 0, 3, 5, 7, 0],
+[0, 1, 0, 0, 0, 0, 0, 0, 0],
+[7, 0, 0, 0, 9, 0, 0, 8, 3],
+[0, 0, 0, 9, 4, 6, 7, 0, 0],
+[0, 8, 0, 0, 5, 0, 0, 4, 0],
+[0, 0, 6, 8, 7, 2, 0, 0, 0],
+[5, 7, 0, 0, 1, 0, 0, 0, 4],
+[0, 0, 0, 0, 0, 0, 0, 1, 0],
+[0, 2, 1, 7, 0, 0, 8, 6, 5]
+]
+}
+Output:
+
+[
+[8, 4, 9, 1, 6, 3, 5, 7, 2],
+[3, 1, 5, 2, 8, 7, 4, 9, 6],
+[7, 6, 2, 4, 9, 5, 1, 8, 3],
+[1, 5, 3, 9, 4, 6, 7, 2, 8],
+[2, 8, 7, 3, 5, 1, 6, 4, 9],
+[4, 9, 6, 8, 7, 2, 3, 5, 1],
+[5, 7, 8, 6, 1, 9, 2, 3, 4],
+[6, 3, 4, 5, 2, 8, 9, 1, 7],
+[9, 2, 1, 7, 3, 4, 8, 6, 5]
+]
+Notes
+You can assume that any given puzzle will have exactly one solution.
+
+Constraints:
+
+Size of the input array is exactly 9 x 9
+0 <= value in the input array <= 9
+'''
+#solution
+
+def solve_sudoku_puzzle(board):
+    """
+    Args:
+        board(list_list_int32)
+    Returns:
+        list_list_int32
+    """
+
+    solve(board, 0, 0)
+
+    return board
+
+
+def solve(board, row, col):
+
+    # Base Case
+    if row == 9:
+        return True
+
+    # Find next cell
+    next_row = row
+    next_col = col + 1
+
+    if next_col == 9:
+        next_row = row + 1
+        next_col = 0
+
+    # Skip filled cell
+    if board[row][col] != 0:
+        return solve(board, next_row, next_col)
+
+    # Try digits 1 to 9
+    for digit in range(1, 10):
+
+        if isSafe(board, row, col, digit):
+
+            # Place digit
+            board[row][col] = digit
+
+            # Recurse
+            if solve(board, next_row, next_col):
+                return True
+
+            # Backtrack
+            board[row][col] = 0
+
+    return False
+
+
+def isSafe(board, row, col, digit):
+
+    # Check Row
+    for j in range(9):
+        if board[row][j] == digit:
+            return False
+
+    # Check Column
+    for i in range(9):
+        if board[i][col] == digit:
+            return False
+
+    # Check 3 x 3 Grid
+    start_row = (row // 3) * 3
+    start_col = (col // 3) * 3
+
+    for i in range(start_row, start_row + 3):
+        for j in range(start_col, start_col + 3):
+            if board[i][j] == digit:
+                return False
+
+    return True
